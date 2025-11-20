@@ -1,7 +1,7 @@
 // app/faq/page.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import type React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { faqItems } from "@/config/faq";
@@ -14,7 +14,8 @@ const slugify = (input: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-export default function FaqPage() {
+// This component actually uses the hooks and is wrapped in <Suspense>
+function FaqPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -27,7 +28,7 @@ export default function FaqPage() {
     []
   );
 
-  // Initial open state comes from URL, but we never scroll.
+  // Initial open state comes from URL
   const [activeSlug, setActiveSlug] = useState<string | undefined>(() => {
     return searchParams.get("q") || undefined;
   });
@@ -46,10 +47,8 @@ export default function FaqPage() {
 
   const handleToggle = (slug: string) => {
     if (activeSlug === slug) {
-      // closing current → clear URL
       closeAll();
     } else {
-      // open this one, close others
       openSlug(slug);
     }
   };
@@ -62,44 +61,38 @@ export default function FaqPage() {
       }
     };
 
-  // If you want a “last updated” for the whole FAQ header, you can pull
-  // it from the most recent item. For now we just use the first item.
+  // For header “last updated”
   const faqLastUpdated = faqItems[0]?.lastUpdated ?? "2025";
 
   return (
-    <div className="space-y-6 py-8 md:py-10">
-      {/* Header card – styled like privacy/legal & updates pages */}
-      <section className="rounded-3xl border border-slate-800 bg-slate-950/80 px-5 py-6 shadow-sm md:px-7 md:py-7">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1 text-[11px] font-medium tracking-wide text-slate-200">
-              <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
-              FAQ & Help
-            </div>
-            <div className="space-y-1.5">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-50 md:text-3xl">
-                Frequently Asked Questions
-              </h1>
-              <p className="text-xs text-slate-400 md:text-sm">
-                Everything about data freshness, accuracy, security,
-                contributing, and more. Click a question below to expand its
-                answer.
-              </p>
-            </div>
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8 md:py-10">
+      {/* Header card – visually aligned with Updates / Privacy pages */}
+      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg md:p-8">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-900/80 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-slate-200">
+            <span aria-hidden className="text-sm">
+              ❓
+            </span>
+            <span>FAQ &amp; Help</span>
           </div>
-
-          <div className="flex items-start justify-end text-xs text-slate-500 md:text-right">
-            <p>
-              Last updated:{" "}
-              <span className="font-medium text-slate-200">
-                {faqLastUpdated}
-              </span>
-            </p>
-          </div>
+          <p className="text-xs text-slate-400">
+            Last updated:{" "}
+            <span className="font-medium text-slate-200">{faqLastUpdated}</span>
+          </p>
         </div>
+
+        <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-50 md:text-3xl">
+          Frequently Asked Questions
+        </h1>
+
+        <p className="mt-4 max-w-3xl text-xs leading-relaxed text-slate-300 md:text-sm">
+          Answers to the most common questions about data freshness, accuracy,
+          security, contributions, and more. Click a question below to expand
+          its answer.
+        </p>
       </section>
 
-      {/* Question list – same card style as other pages */}
+      {/* Question list */}
       <section className="space-y-4">
         {faqsWithSlugs.map((faq) => {
           const isOpen = activeSlug === faq.slug;
@@ -111,9 +104,9 @@ export default function FaqPage() {
             <section
               key={faq.slug}
               id={`faq-${faq.slug}`}
-              className="w-full rounded-3xl border border-slate-800 bg-slate-950/80 px-5 py-4 shadow-sm md:px-7 md:py-5"
+              className="w-full rounded-2xl border border-slate-800 bg-slate-950/80 p-5 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/70 hover:shadow-md md:p-7"
             >
-              {/* Entire header row is clickable */}
+              {/* Header row is clickable */}
               <div
                 role="button"
                 tabIndex={0}
@@ -123,14 +116,22 @@ export default function FaqPage() {
                 aria-expanded={isOpen}
                 aria-controls={`faq-panel-${faq.slug}`}
               >
-                <div className="flex flex-1 flex-col gap-1">
-                  {/* Question title */}
-                  <span className="text-lg font-semibold tracking-tight text-slate-50 md:text-xl">
-                    {faq.question}
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    Last updated: {faq.lastUpdated}
-                  </span>
+                <div className="flex flex-1 items-start gap-3">
+                  <div className="mt-1 hidden h-7 w-7 items-center justify-center rounded-xl bg-slate-900/80 text-base text-slate-200 sm:flex">
+                    <span aria-hidden>❓</span>
+                  </div>
+                  <div className="flex flex-1 flex-col gap-1">
+                    {/* Question title */}
+                    <span className="text-lg font-semibold tracking-tight text-slate-50 md:text-xl">
+                      {faq.question}
+                    </span>
+                    <span className="text-[11px] uppercase tracking-wide text-slate-500">
+                      Last updated:{" "}
+                      <span className="font-medium text-slate-300">
+                        {faq.lastUpdated}
+                      </span>
+                    </span>
+                  </div>
                 </div>
 
                 {/* Chevron icon that rotates when open */}
@@ -161,7 +162,10 @@ export default function FaqPage() {
                 aria-hidden={!isOpen}
               >
                 {paragraphs.map((para, idx) => (
-                  <p key={idx} className="mb-2 whitespace-pre-line last:mb-0">
+                  <p
+                    key={idx}
+                    className="mb-2 whitespace-pre-line text-xs leading-relaxed text-slate-200 last:mb-0 md:text-sm"
+                  >
                     {para}
                   </p>
                 ))}
@@ -171,5 +175,18 @@ export default function FaqPage() {
         })}
       </section>
     </div>
+  );
+}
+
+// Wrap the hook-using component in Suspense to satisfy Next.js
+export default function FaqPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="px-4 py-8 text-sm text-slate-400">Loading FAQ…</div>
+      }
+    >
+      <FaqPageInner />
+    </Suspense>
   );
 }

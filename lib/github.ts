@@ -16,6 +16,7 @@ export type CommitSummary = {
   shortSha: string;
   message: string;
   authorName: string | null;
+  authorLogin: string | null; // 👈 added
   authorAvatarUrl: string | null;
   htmlUrl: string;
   committedAt: string; // ISO string
@@ -185,6 +186,7 @@ export async function getRecentCommits(limit = 10): Promise<CommitSummary[]> {
     const message: string = c.commit?.message ?? "";
     const authorName: string | null =
       c.commit?.author?.name ?? c.author?.login ?? null;
+    const authorLogin: string | null = c.author?.login ?? null; // 👈 added
     const authorAvatarUrl: string | null = c.author?.avatar_url ?? null;
     const htmlUrl: string = c.html_url;
     const committedAt: string =
@@ -195,6 +197,7 @@ export async function getRecentCommits(limit = 10): Promise<CommitSummary[]> {
       shortSha,
       message,
       authorName,
+      authorLogin, // 👈 added
       authorAvatarUrl,
       htmlUrl,
       committedAt,

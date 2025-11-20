@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { siteConfig } from "@/config/site";
+import EnrollmentCountdown from "@/components/EnrollmentCountdown";
 
 export default function Home() {
   return (
@@ -8,12 +10,8 @@ export default function Home() {
         id="get-started"
         className="grid items-center gap-10 md:grid-cols-[1.3fr_minmax(0,1fr)]"
       >
-        {/* Left side: copy */}
         <div className="space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1 text-[11px] text-slate-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-            Coog Planner · UH degree & semester planning
-          </div>
+          <EnrollmentCountdown />
 
           <div className="space-y-3">
             <h1 className="text-3xl font-semibold tracking-tight text-slate-50 md:text-4xl">
@@ -26,8 +24,8 @@ export default function Home() {
             <p className="max-w-xl text-sm leading-relaxed text-slate-300 md:text-[15px]">
               Coog Planner suggests semesters around your work hours and
               preferences — finding UH classes that satisfy degree requirements,
-              keep loads light when you need it, and surface easier options you
-              might have missed.
+              keep work loads light when you need it, and finds/suggests easier
+              options you might have missed.
             </p>
           </div>
 
@@ -39,7 +37,7 @@ export default function Home() {
               Browse UH academics
             </Link>
             <button className="rounded-full border border-slate-700 bg-transparent px-4 py-2 text-xs font-medium text-slate-200 hover:border-slate-500 hover:bg-slate-900 md:px-5 md:text-sm">
-              Get your transcript analysis (soon)
+              Get your transcript analysis
             </button>
           </div>
         </div>
@@ -49,14 +47,14 @@ export default function Home() {
           <div className="mb-4 flex items-center justify-between">
             <div className="space-y-0.5">
               <p className="text-xs font-medium text-slate-200">
-                Kevin Huy Trinh · B.S. Computer Science
+                Kevin Trinh · B.S. Computer Science
               </p>
               <p className="text-[11px] text-slate-400">
-                Plan tuned to your personal life and preferences
+                Plan tuned to your personal preferences
               </p>
             </div>
             <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
-              Grad: Spring 2027
+              Est. Graduation: SP '27
             </span>
           </div>
 
@@ -66,8 +64,8 @@ export default function Home() {
                 Your preferences
               </p>
               <ul className="space-y-1">
-                <li>• Work ~30 hours / week alongside classes</li>
-                <li>• Prefer lighter, manageable technical loads</li>
+                <li>• You work ~30 hours / week alongside classes</li>
+                <li>• Super easy courses to boost my GPA</li>
                 <li>• Electives on Mon / Wed / Fri only when possible</li>
                 <li>
                   • Still must satisfy remaining core, major, and elective
@@ -79,7 +77,7 @@ export default function Home() {
             <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
               <div className="flex items-center justify-between">
                 <p className="font-medium text-slate-100">
-                  Recommended next semester
+                  Suggested for next semester:
                 </p>
                 <p className="text-[10px] text-slate-400">
                   12–15 hours · light/medium load
@@ -87,32 +85,36 @@ export default function Home() {
               </div>
               <ul className="mt-2 space-y-1">
                 <li>
-                  <span className="font-medium">COSC 2436</span> — Major
-                  requirement · Difficulty 3.7 / 5 · Est. GPA 3.2
+                  <span className="font-medium">COSC 2436</span> - Major
+                  requirement · Difficulty 3.7 / 5 · Est. GPA 3.23
                 </li>
                 <li>
-                  <span className="font-medium">COSC 3320</span> — Major
-                  requirement · Difficulty 3.4 / 5 · Est. GPA 3.3
+                  <span className="font-medium">COSC 3320</span> - Major
+                  requirement · Difficulty 3.4 / 5 · Est. GPA 3.37
                 </li>
                 <li>
-                  <span className="font-medium">PHIL 1301</span> — Fulfills:
-                  Lang, Philosophy &amp; Culture · M/W/F · Easier option · Est.
-                  GPA 3.6
+                  <span className="font-medium">PHIL 1301</span> - Lang,
+                  Philosophy &amp; Culture · Easier option · Est. GPA 3.61
+                </li>
+                <li>
+                  <span className="font-medium">MATH 2318</span> - Math
+                  requirement · Difficuly: 4.2/5 · Est. GPA 3.18
                 </li>
               </ul>
             </div>
 
             <div className="rounded-lg border border-dashed border-slate-800 bg-slate-950/60 p-2 text-[10px] text-slate-400">
-              Mix of 2 technicals + 1 lighter core. Estimated okay for ~30 hours
-              of work per week with study time, based on past student data.
+              Mix of 1 hard + 2 med + 1 lighter core. Estimated okay for ~30
+              hours of work per week with study time, based on past student
+              data.
             </div>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
             <p>
-              Estimated GPA before plan:{" "}
+              Current GPA before plan:{" "}
               <span className="font-semibold text-slate-100">3.32</span> → after
-              plan: <span className="font-semibold text-slate-100">3.45</span>{" "}
+              plan: <span className="font-semibold text-slate-100">3.42</span>{" "}
               (projected)
             </p>
           </div>
@@ -165,78 +167,29 @@ export default function Home() {
       </section>
 
       {/* Features */}
+      {/* Features */}
       <section id="features" className="space-y-5">
         <div className="space-y-2">
           <h2 className="text-lg font-semibold tracking-tight text-slate-50">
-            Built for Coogs, not generic students.
+            {siteConfig.features.title}
           </h2>
           <p className="text-xs text-slate-400">
-            Coog Planner is opinionated around UH workflows: catalogs,
-            prerequisites, and how students actually plan their semesters.
+            {siteConfig.features.description}
           </p>
         </div>
 
         <div className="grid items-stretch gap-4 md:grid-cols-3">
-          {/* 1 */}
-          <div className="flex h-full flex-col rounded-xl border border-slate-800 bg-slate-900/70 p-4 text-left transition-all duration-150 hover:-translate-y-1 hover:border-slate-600 hover:bg-slate-900 hover:shadow-lg hover:shadow-black/40">
-            <p className="text-sm font-semibold text-slate-100">
-              UH-specific structure
-            </p>
-            <p className="mt-2 text-[11px] text-slate-400">
-              Degree plans based on UH catalogs, not generic four-year
-              templates. Separate core, major, and elective blocks.
-            </p>
-          </div>
-          {/* 2 */}
-          <div className="flex h-full flex-col rounded-xl border border-slate-800 bg-slate-900/70 p-4 text-left transition-all duration-150 hover:-translate-y-1 hover:border-slate-600 hover:bg-slate-900 hover:shadow-lg hover:shadow-black/40">
-            <p className="text-sm font-semibold text-slate-100">
-              Prereq-aware planning
-            </p>
-            <p className="mt-2 text-[11px] text-slate-400">
-              Know instantly if a planned semester violates prerequisites or
-              recommended sequences before enrollment.
-            </p>
-          </div>
-          {/* 3 */}
-          <div className="flex h-full flex-col rounded-xl border border-slate-800 bg-slate-900/70 p-4 text-left transition-all duration-150 hover:-translate-y-1 hover:border-slate-600 hover:bg-slate-900 hover:shadow-lg hover:shadow-black/40">
-            <p className="text-sm font-semibold text-slate-100">
-              Graduation timeline
-            </p>
-            <p className="mt-2 text-[11px] text-slate-400">
-              Visualize best-case and realistic graduation semesters based on
-              your planned loads.
-            </p>
-          </div>
-          {/* 4 */}
-          <div className="flex h-full flex-col rounded-xl border border-slate-800 bg-slate-900/70 p-4 text-left transition-all duration-150 hover:-translate-y-1 hover:border-slate-600 hover:bg-slate-900 hover:shadow-lg hover:shadow-black/40">
-            <p className="text-sm font-semibold text-slate-100">
-              Smart semester loads
-            </p>
-            <p className="mt-2 text-[11px] text-slate-400">
-              Get a feel for when a semester is too heavy or too light with
-              quick load indicators based on credits and course type mix.
-            </p>
-          </div>
-          {/* 5 */}
-          <div className="flex h-full flex-col rounded-xl border border-slate-800 bg-slate-900/70 p-4 text-left transition-all duration-150 hover:-translate-y-1 hover:border-slate-600 hover:bg-slate-900 hover:shadow-lg hover:shadow-black/40">
-            <p className="text-sm font-semibold text-slate-100">
-              What-if degree changes
-            </p>
-            <p className="mt-2 text-[11px] text-slate-400">
-              Experiment with switching majors or adding a minor while seeing
-              which classes still count and how your grad date shifts.
-            </p>
-          </div>
-          {/* 6 */}
-          <div className="flex h-full flex-col rounded-xl border border-slate-800 bg-slate-900/70 p-4 text-left transition-all duration-150 hover:-translate-y-1 hover:border-slate-600 hover:bg-slate-900 hover:shadow-lg hover:shadow-black/40">
-            <p className="text-sm font-semibold text-slate-100">
-              Shareable plans
-            </p>
-            <p className="mt-2 text-[11px] text-slate-400">
-              Share read-only plans with friends, mentors, or advisors so
-              everyone is aligned on your semesters and graduation path.
-            </p>
-          </div>
+          {siteConfig.features.items.map((feature) => (
+            <div
+              key={feature.id}
+              className="flex h-full flex-col rounded-xl border border-slate-800 bg-slate-900/70 p-4 text-left transition-all duration-150 hover:-translate-y-1 hover:border-slate-600 hover:bg-slate-900 hover:shadow-lg hover:shadow-black/40"
+            >
+              <p className="text-sm font-semibold text-slate-100">
+                {feature.title}
+              </p>
+              <p className="mt-2 text-[11px] text-slate-400">{feature.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 

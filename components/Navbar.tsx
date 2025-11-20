@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { siteConfig } from "@/config/site";
 import { useRef, useState } from "react";
 
 type MenuKey =
@@ -82,39 +84,19 @@ export default function Navbar() {
 
   const degreeItems: DesktopItem[] = [
     {
-      title: "Degree analysis report",
+      title: "Get my degree analysis report",
       desc: "Completion breakdown, remaining requirements, and timeline.",
       href: "#analyze",
     },
     {
-      title: "Unofficial transcript guide",
-      desc: "How to download your UH unofficial transcript step-by-step.",
-      href: "#faq",
+      title: "How to download transcript",
+      desc: "View FAQ guide on how to get and download your free UH unofficial transcript.",
+      href: "/faq",
     },
   ];
 
-  const rankingsItems: DesktopItem[] = [
-    {
-      title: "Instructor rankings",
-      desc: "See which instructors students actually succeed with.",
-      href: "#leaderboards",
-    },
-    {
-      title: "Course rankings",
-      desc: "Most loved, most dropped, and most repeated classes.",
-      href: "#leaderboards",
-    },
-    {
-      title: "Rate My Professor rankings",
-      desc: "Blend RMP-style scores with UH-specific performance data.",
-      href: "#leaderboards",
-    },
-    {
-      title: "Program difficulty snapshots",
-      desc: "High-level difficulty indicators by major (experimental).",
-      href: "#leaderboards",
-    },
-  ];
+  // rankings has NO dropdown
+  const rankingsItems: DesktopItem[] = [];
 
   const extensionItems: DesktopItem[] = [
     {
@@ -123,18 +105,8 @@ export default function Navbar() {
       href: "#browser-extension",
     },
     {
-      title: "About & features",
-      desc: "See what the overlay surfaces on myUH and CougarGrades.",
-      href: "#browser-extension",
-    },
-    {
       title: "How it works",
       desc: "Learn how pages are parsed safely and efficiently.",
-      href: "#browser-extension",
-    },
-    {
-      title: "View on extension store",
-      desc: "Open the listing in your browser’s extension store (soon).",
       href: "#browser-extension",
     },
   ];
@@ -146,19 +118,19 @@ export default function Navbar() {
       href: "#about",
     },
     {
-      title: "Updates",
-      desc: "Changelogs and what shipped in each version.",
-      href: "#updates",
-    },
-    {
-      title: "Sponsor this project",
-      desc: "Help support hosting, data, and future feature work.",
-      href: "#about",
-    },
-    {
       title: "FAQ",
       desc: "Answers to common questions about data and accuracy.",
-      href: "#faq",
+      href: "/faq",
+    },
+    {
+      title: "Updates",
+      desc: "Changelogs and what shipped in each version.",
+      href: "/updates",
+    },
+    {
+      title: "Privacy & legal",
+      desc: "How we handle data, privacy, and disclaimers.",
+      href: "/privacy-legal",
     },
   ];
 
@@ -169,7 +141,7 @@ export default function Navbar() {
       case "degree":
         return degreeItems;
       case "rankings":
-        return rankingsItems;
+        return rankingsItems; // empty -> no dropdown
       case "extension":
         return extensionItems;
       case "resources":
@@ -211,172 +183,189 @@ export default function Navbar() {
   // --- JSX ---
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/70 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2" onClick={closeAll}>
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-400 text-sm font-semibold tracking-tight text-slate-950">
-            CP
-          </span>
-          <span className="text-base font-semibold tracking-tight text-slate-50">
-            Coog Planner
-          </span>
-        </Link>
+    <>
+      <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/70 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2" onClick={closeAll}>
+            <Image
+              src="/logo.png"
+              alt={`${siteConfig.name} logo`}
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-md"
+              priority
+            />
+            <span className="text-base font-semibold tracking-tight text-slate-50">
+              {siteConfig.domain}
+            </span>
+          </Link>
 
-        {/* Center nav + dropdown (desktop) */}
-        <div className="hidden flex-1 items-center justify-center md:flex">
-          <div className="relative" onMouseLeave={scheduleCloseMenu}>
-            <nav className="flex items-center gap-5 text-sm font-medium text-slate-300">
-              {navLinks.map((item) => {
-                const isActive = activeMenu === item.id;
-                const baseClasses =
-                  "px-2 py-1.5 rounded-full transition-colors cursor-pointer";
-                const stateClasses = isActive
-                  ? "bg-slate-900 text-slate-50"
-                  : "text-slate-300 hover:bg-slate-900 hover:text-slate-50";
+          {/* Center nav + dropdown (desktop) */}
+          <div className="hidden flex-1 items-center justify-center md:flex">
+            <div className="relative" onMouseLeave={scheduleCloseMenu}>
+              <nav className="flex items-center gap-5 text-sm font-medium text-slate-300">
+                {navLinks.map((item) => {
+                  const isActive = activeMenu === item.id;
+                  const baseClasses =
+                    "px-2 py-1.5 rounded-full transition-colors cursor-pointer";
+                  const stateClasses = isActive
+                    ? "bg-slate-900 text-slate-50"
+                    : "text-slate-300 hover:bg-slate-900 hover:text-slate-50";
 
-                if (item.id === "resources") {
-                  // dropdown only
+                  if (item.id === "resources") {
+                    // dropdown only
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={`${baseClasses} ${stateClasses}`}
+                        onMouseEnter={() => openMenu("resources")}
+                        onClick={() =>
+                          openMenu(
+                            activeMenu === "resources" ? null : "resources"
+                          )
+                        }
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  }
+
+                  if (item.id === "rankings") {
+                    // rankings has NO dropdown; hovering should close any open dropdown
+                    return (
+                      <Link
+                        key={item.id}
+                        href={item.href ?? "#"}
+                        className={`${baseClasses} ${stateClasses}`}
+                        onMouseEnter={() => openMenu(null)}
+                      >
+                        {item.label}
+                      </Link>
+                    );
+                  }
+
+                  // academics, degree, extension -> have dropdowns
                   return (
-                    <button
+                    <Link
                       key={item.id}
-                      type="button"
+                      href={item.href ?? "#"}
                       className={`${baseClasses} ${stateClasses}`}
-                      onMouseEnter={() => openMenu("resources")}
-                      onClick={() =>
-                        openMenu(
-                          activeMenu === "resources" ? null : "resources"
-                        )
-                      }
+                      onMouseEnter={() => openMenu(item.id)}
                     >
                       {item.label}
-                    </button>
+                    </Link>
                   );
-                }
+                })}
+              </nav>
 
-                return (
-                  <Link
-                    key={item.id}
-                    href={item.href ?? "#"}
-                    className={`${baseClasses} ${stateClasses}`}
-                    onMouseEnter={() => openMenu(item.id)}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Dropdown panel */}
-            <div
-              onMouseEnter={() => {
-                if (activeMenu) openMenu(activeMenu);
-              }}
-              className={`absolute left-1/2 top-full mt-2 w-[min(40rem,95vw)] -translate-x-1/2 rounded-2xl border border-slate-800 bg-slate-950/95 p-4 text-sm shadow-2xl shadow-black/50 transition-all duration-150 ease-out ${
-                activeMenu
-                  ? "pointer-events-auto opacity-100 translate-y-0"
-                  : "pointer-events-none opacity-0 -translate-y-1"
-              }`}
-            >
-              {desktopItems.length > 0 && (
-                <>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {desktopItems.map((item) => (
-                      <Link
-                        key={item.title}
-                        href={item.href}
-                        className="group rounded-xl px-3 py-2 hover:bg-slate-900"
-                        onClick={closeAll}
-                      >
-                        <p className="text-sm font-semibold text-slate-50 group-hover:text-slate-50">
-                          {item.title}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-400">
-                          {item.desc}
-                        </p>
-                      </Link>
-                    ))}
-                  </div>
-
-                  {/* Academics footer message */}
-                  {activeMenu === "academics" && (
-                    <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-3 text-xs">
-                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                        <span className="font-semibold text-slate-50">
-                          New: New Degree Programs
-                        </span>
-                        <span className="text-slate-400">
-                          More degrees and programs added.
-                        </span>
-                      </div>
-                      <Link
-                        href="#updates"
-                        className="ml-4 text-xs font-semibold text-red-400 hover:text-red-300"
-                        onClick={closeAll}
-                      >
-                        More info
-                      </Link>
+              {/* Dropdown panel */}
+              <div
+                onMouseEnter={() => {
+                  if (activeMenu) openMenu(activeMenu);
+                }}
+                className={`absolute left-1/2 top-full mt-2 w-[min(40rem,95vw)] -translate-x-1/2 rounded-2xl border border-slate-800 bg-slate-950/95 p-4 text-sm shadow-2xl shadow-black/50 transition-all duration-150 ease-out ${
+                  activeMenu
+                    ? "pointer-events-auto opacity-100 translate-y-0"
+                    : "pointer-events-none opacity-0 -translate-y-1"
+                }`}
+              >
+                {desktopItems.length > 0 && (
+                  <>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {desktopItems.map((item) => (
+                        <Link
+                          key={item.title}
+                          href={item.href}
+                          className="group rounded-xl px-3 py-2 hover:bg-slate-900"
+                          onClick={closeAll}
+                        >
+                          <p className="text-sm font-semibold text-slate-50 group-hover:text-slate-50">
+                            {item.title}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-400">
+                            {item.desc}
+                          </p>
+                        </Link>
+                      ))}
                     </div>
-                  )}
 
-                  {/* Resources footer message */}
-                  {activeMenu === "resources" && (
-                    <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-3 text-xs">
-                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                        <span className="font-semibold text-slate-50">
-                          Privacy &amp; legal
-                        </span>
+                    {/* Academics footer message */}
+                    {activeMenu === "academics" && (
+                      <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-3 text-xs">
                         <span className="text-slate-400">
-                          Learn how data is handled and our disclaimers.
+                          New (beta): Degree planning recommendations.
                         </span>
+                        <Link
+                          href="/updates"
+                          className="ml-4 text-xs font-semibold text-red-400 hover:text-red-300"
+                          onClick={closeAll}
+                        >
+                          More info
+                        </Link>
                       </div>
-                      <Link
-                        href="#legal"
-                        className="ml-4 text-xs font-semibold text-red-400 hover:text-red-300"
-                        onClick={closeAll}
-                      >
-                        View policy
-                      </Link>
-                    </div>
-                  )}
-                </>
-              )}
+                    )}
+
+                    {/* Resources footer message */}
+                    {activeMenu === "resources" && (
+                      <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-3 text-xs">
+                        <span className="text-slate-400">
+                          Sponsor / donate to support CoogPlanner.
+                        </span>
+                        <Link
+                          href="#about"
+                          className="ml-4 text-xs font-semibold text-red-400 hover:text-red-300"
+                          onClick={closeAll}
+                        >
+                          Sponsor / donate
+                        </Link>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Auth buttons (desktop) */}
-        <div className="hidden items-center gap-3 md:flex">
-          <Link
-            href="#signin"
-            className="text-sm font-medium text-slate-300 hover:text-slate-50"
+          {/* Auth buttons (desktop) */}
+          <div className="hidden items-center gap-3 md:flex">
+            <Link
+              href="#signin"
+              className="text-sm font-medium text-slate-300 hover:text-slate-50"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="#signup"
+              className="rounded-lg bg-red-400 px-4 py-1.5 text-sm font-semibold text-slate-950 shadow-sm hover:bg-red-300"
+            >
+              Sign up
+            </Link>
+          </div>
+
+          {/* Mobile menu button */}
+          <button
+            type="button"
+            className="inline-flex items-center justify-center p-1.5 text-slate-200 md:hidden"
+            onClick={() => {
+              clearCloseTimeout();
+              setActiveMenu(null);
+              setMobileOpen((prev) => !prev);
+            }}
+            aria-label="Toggle navigation"
           >
-            Sign in
-          </Link>
-          <Link
-            href="#signup"
-            className="rounded-lg bg-red-400 px-4 py-1.5 text-sm font-semibold text-slate-950 shadow-sm hover:bg-red-300"
-          >
-            Sign up
-          </Link>
+            <span className="text-2xl">{mobileOpen ? "✕" : "☰"}</span>
+          </button>
         </div>
+      </header>
 
-        {/* Mobile menu button */}
-        <button
-          type="button"
-          className="inline-flex items-center justify-center p-1.5 text-slate-200 md:hidden"
-          onClick={() => {
-            clearCloseTimeout();
-            setActiveMenu(null);
-            setMobileOpen((prev) => !prev);
-          }}
-          aria-label="Toggle navigation"
-        >
-          <span className="text-2xl">{mobileOpen ? "✕" : "☰"}</span>
-        </button>
-      </div>
+      {/* Click-away overlay for mobile menu */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-30 md:hidden" onClick={closeAll} />
+      )}
 
-      {/* 🔧 Mobile nav panel – border only when open so no ghost bar */}
+      {/* Mobile nav panel */}
       <div
         className={`bg-slate-950/95 md:hidden transform transition-all duration-150 ease-out overflow-hidden ${
           mobileOpen
@@ -435,25 +424,19 @@ export default function Navbar() {
               <Link href="#about" onClick={closeAll}>
                 About Coog Planner
               </Link>
-              <Link href="#about" onClick={closeAll}>
-                Sponsor this project
-              </Link>
-              <Link href="#updates" onClick={closeAll}>
-                Updates
-              </Link>
-              <Link href="#faq" onClick={closeAll}>
+              <Link href="/faq" onClick={closeAll}>
                 FAQ
               </Link>
-              <Link href="#legal" onClick={closeAll}>
-                Privacy &amp; data security
+              <Link href="/updates" onClick={closeAll}>
+                Updates
               </Link>
-              <Link href="#legal" onClick={closeAll}>
-                Legal &amp; policy disclaimer
+              <Link href="/privacy-legal" onClick={closeAll}>
+                Privacy &amp; legal
               </Link>
             </div>
           </div>
         </div>
       </div>
-    </header>
+    </>
   );
 }

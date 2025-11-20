@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
-import SearchBar from "@/components/SearchBar";
 import Footer from "@/components/Footer";
+import SearchBarWrapper from "@/components/SearchBarWrapper";
 
 export const metadata: Metadata = {
   title: "Coog Planner",
@@ -19,7 +19,7 @@ export default function RootLayout({
       <body className="bg-slate-950 text-slate-50">
         <div className="flex min-h-screen flex-col">
           <Navbar />
-          <SearchBar />
+          <SearchBarWrapper />
           <main className="mx-auto flex-1 max-w-5xl px-4 py-8">{children}</main>
           <Footer />
         </div>

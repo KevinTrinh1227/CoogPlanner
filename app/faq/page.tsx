@@ -65,7 +65,7 @@ function FaqPageInner() {
   const faqLastUpdated = faqItems[0]?.lastUpdated ?? "2025";
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8 md:py-10">
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10 lg:py-14">
       {/* Header card – visually aligned with Updates / Privacy pages */}
       <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg md:p-8">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -118,7 +118,7 @@ function FaqPageInner() {
               >
                 <div className="flex flex-1 items-start gap-3">
                   <div className="mt-1 hidden h-7 w-7 items-center justify-center rounded-xl bg-slate-900/80 text-base text-slate-200 sm:flex">
-                    <span aria-hidden>❓</span>
+                    <span aria-hidden>🔹</span>
                   </div>
                   <div className="flex flex-1 flex-col gap-1">
                     {/* Question title */}

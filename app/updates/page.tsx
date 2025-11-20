@@ -48,91 +48,6 @@ function fallbackAvatarForLogin(login: string | null | undefined, size = 64) {
   return `https://github.com/${login}.png?size=${size}`;
 }
 
-type Contributor = {
-  login: string;
-  displayName: string | null;
-  avatarUrl: string | null;
-  contributions: number;
-  role: "Maintainer" | "Contributor";
-};
-
-// Build a contributor list from commits, issues, PRs
-function buildContributors(
-  ownerLogin: string,
-  commits: CommitSummary[],
-  issues: IssueSummary[],
-  prs: PullRequestSummary[]
-): Contributor[] {
-  const map = new Map<string, Contributor>();
-
-  const bump = (
-    login: string | null,
-    displayName: string | null,
-    avatarUrl: string | null
-  ) => {
-    if (!login) return;
-    const existing = map.get(login);
-    if (existing) {
-      existing.contributions += 1;
-      if (!existing.avatarUrl && avatarUrl) existing.avatarUrl = avatarUrl;
-      if (!existing.displayName && displayName)
-        existing.displayName = displayName;
-    } else {
-      map.set(login, {
-        login,
-        displayName: displayName ?? login,
-        avatarUrl: avatarUrl ?? fallbackAvatarForLogin(login, 80),
-        contributions: 1,
-        role: login === ownerLogin ? "Maintainer" : "Contributor",
-      });
-    }
-  };
-
-  // From commits
-  for (const c of commits) {
-    bump(
-      c.authorLogin ?? null,
-      c.authorName ?? null,
-      c.authorAvatarUrl ?? null
-    );
-  }
-
-  // From issues
-  for (const issue of issues) {
-    bump(
-      (issue as any).authorLogin ?? null,
-      (issue as any).authorLogin ?? null,
-      (issue as any).authorAvatarUrl ??
-        fallbackAvatarForLogin((issue as any).authorLogin, 80)
-    );
-  }
-
-  // From PRs
-  for (const pr of prs) {
-    bump(
-      (pr as any).authorLogin ?? null,
-      (pr as any).authorLogin ?? null,
-      (pr as any).authorAvatarUrl ??
-        fallbackAvatarForLogin((pr as any).authorLogin, 80)
-    );
-  }
-
-  // Ensure repo owner is present
-  if (!map.has(ownerLogin)) {
-    map.set(ownerLogin, {
-      login: ownerLogin,
-      displayName: ownerLogin,
-      avatarUrl: fallbackAvatarForLogin(ownerLogin, 80),
-      contributions: 0,
-      role: "Maintainer",
-    });
-  }
-
-  return Array.from(map.values())
-    .sort((a, b) => b.contributions - a.contributions)
-    .slice(0, 24); // keep top contributors
-}
-
 // Choose best ZIP download URL for a release
 function getReleaseZipUrl(
   release: ReleaseSummary,
@@ -181,8 +96,6 @@ export default async function UpdatesPage() {
     latestRelease?.tagName ?? meta?.latestTag ?? "Unversioned";
   const lastUpdated =
     latestCommit?.committedAt ?? latestRelease?.publishedAt ?? null;
-
-  const contributors = buildContributors(owner, commits, issues, pullRequests);
 
   const latestReleaseDownloadUrl = latestRelease
     ? getReleaseZipUrl(latestRelease, owner, repo)
@@ -273,66 +186,6 @@ export default async function UpdatesPage() {
             </span>
           </div>
         </div>
-      </section>
-
-      {/* Contributors / Collaborators */}
-      <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-6 sm:p-8">
-        <div className="flex items-start gap-3">
-          <div className="mt-1 rounded-xl bg-slate-900/80 p-2 text-lg">
-            <span aria-hidden>👥</span>
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
-              Developers &amp; collaborators
-            </h2>
-            <p className="mt-1 text-sm text-slate-300">
-              Everyone who&apos;s contributed via commits, issues, and pull
-              requests in the recent history of this repo. Make a PR or open an
-              issue, and you&apos;ll show up here automatically.
-            </p>
-          </div>
-        </div>
-
-        {contributors.length === 0 ? (
-          <p className="text-sm text-slate-400">
-            No contributors found yet. Once someone opens issues, PRs, or pushes
-            commits to this repo, they&apos;ll appear here.
-          </p>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {contributors.map((contributor) => (
-              <a
-                key={contributor.login}
-                href={`https://github.com/${contributor.login}`}
-                target="_blank"
-                rel="noreferrer"
-                className="group flex flex-col items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/80 p-4 text-center text-xs text-slate-200 transition-all duration-150 hover:-translate-y-1 hover:border-brand-light/70 hover:text-brand-light hover:shadow-lg focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-              >
-                <div className="relative h-16 w-16 overflow-hidden rounded-2xl border border-slate-700 bg-slate-800">
-                  {contributor.avatarUrl ? (
-                    <img
-                      src={contributor.avatarUrl}
-                      alt={contributor.displayName ?? contributor.login}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-lg">
-                      <span aria-hidden>👤</span>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-0.5">
-                  <p className="font-semibold text-slate-100 group-hover:text-brand-light">
-                    @{contributor.login}
-                  </p>
-                  <p className="text-[0.7rem] text-slate-400">
-                    {contributor.role}
-                  </p>
-                </div>
-              </a>
-            ))}
-          </div>
-        )}
       </section>
 
       {/* Latest release highlight (if any) */}
@@ -850,9 +703,8 @@ export default async function UpdatesPage() {
         <p className="mt-2 text-sm text-slate-300">
           I strongly encourage contributions — new features, bug fixes, or
           documentation improvements. When you open a PR or issue, your GitHub
-          avatar and profile will show up in the collaborators section above and
-          in the activity feed, so you&apos;ll be visible both on the repo and
-          on this site.
+          avatar and profile will show up in the activity feed, so you&apos;ll
+          be visible both on the repo and on this site.
         </p>
 
         {/* Buttons row */}

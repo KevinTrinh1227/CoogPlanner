@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { siteConfig } from "@/config/site";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type MenuKey =
   | "academics"
@@ -63,7 +63,7 @@ export default function Navbar() {
     {
       title: "Courses",
       desc: "Search UH courses with historical trends and difficulty.",
-      href: "#courses",
+      href: "/courses",
     },
     {
       title: "Instructors",
@@ -115,7 +115,7 @@ export default function Navbar() {
     {
       title: "About Coog Planner",
       desc: "Background, mission, and who is building Coog Planner.",
-      href: "#about",
+      href: "/about",
     },
     {
       title: "FAQ",
@@ -124,12 +124,12 @@ export default function Navbar() {
     },
     {
       title: "Updates",
-      desc: "Changelogs and what shipped in each version.",
+      desc: "Changelogs and more info about new features, data, releases, and more.",
       href: "/updates",
     },
     {
       title: "Privacy & legal",
-      desc: "How we handle data, privacy, and disclaimers.",
+      desc: "How we handle data, privacy, disclaimers, and all the legal stuff.",
       href: "/privacy-legal",
     },
   ];
@@ -179,6 +179,17 @@ export default function Navbar() {
   };
 
   const desktopItems = getMenuItems(activeMenu);
+
+  // Close dropdowns (desktop + mobile) when scrolling
+  useEffect(() => {
+    const handleScroll = () => {
+      setActiveMenu(null);
+      setMobileOpen(false);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // --- JSX ---
 
@@ -314,7 +325,7 @@ export default function Navbar() {
                           Sponsor / donate to support CoogPlanner.
                         </span>
                         <Link
-                          href="#about"
+                          href="/about"
                           className="ml-4 text-xs font-semibold text-red-400 hover:text-red-300"
                           onClick={closeAll}
                         >
@@ -360,83 +371,82 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Click-away overlay for mobile menu */}
+      {/* Mobile overlay + nav panel */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-30 md:hidden" onClick={closeAll} />
-      )}
+        <div className="fixed inset-0 z-30 md:hidden">
+          {/* Click-away backdrop */}
+          <div className="absolute inset-0 bg-black/40" onClick={closeAll} />
 
-      {/* Mobile nav panel */}
-      <div
-        className={`bg-slate-950/95 md:hidden transform transition-all duration-150 ease-out overflow-hidden ${
-          mobileOpen
-            ? "max-h-[1000px] opacity-100 border-t border-slate-800"
-            : "max-h-0 opacity-0 pointer-events-none border-t-0"
-        }`}
-      >
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-4">
-          {/* Auth row - centered identical buttons */}
-          <div className="flex flex-col items-center gap-2">
-            <div className="flex gap-2">
-              <Link
-                href="#signin"
-                className="rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-sm font-medium text-slate-100 shadow-sm hover:border-slate-500 hover:bg-slate-800 transition-colors"
-                onClick={closeAll}
-              >
-                Sign in
-              </Link>
-              <Link
-                href="#signup"
-                className="rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-sm font-medium text-slate-100 shadow-sm hover:border-slate-500 hover:bg-slate-800 transition-colors"
-                onClick={closeAll}
-              >
-                Sign up
-              </Link>
-            </div>
-            <div className="mt-3 h-px w-full max-w-xs bg-slate-800" />
-          </div>
-
-          {/* Coog Planner section */}
-          <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Coog Planner
-            </p>
-            <div className="flex flex-col gap-2 text-lg font-medium text-slate-50">
-              {navLinks
-                .filter((link) => link.showOnMobile && link.id !== "resources")
-                .map((link) => (
+          {/* Panel slides down under the sticky navbar */}
+          <div className="absolute inset-x-0 top-[3.25rem] max-h-[calc(100vh-3.25rem)] overflow-y-auto border-t border-slate-800 bg-slate-950/95 transition-transform duration-150 ease-out">
+            <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-4">
+              {/* Auth row - centered identical buttons */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex gap-2">
                   <Link
-                    key={link.id}
-                    href={link.href ?? "#"}
+                    href="#signin"
+                    className="rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-sm font-medium text-slate-100 shadow-sm hover:border-slate-500 hover:bg-slate-800 transition-colors"
                     onClick={closeAll}
                   >
-                    {link.label}
+                    Sign in
                   </Link>
-                ))}
-            </div>
-          </div>
+                  <Link
+                    href="#signup"
+                    className="rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-sm font-medium text-slate-100 shadow-sm hover:border-slate-500 hover:bg-slate-800 transition-colors"
+                    onClick={closeAll}
+                  >
+                    Sign up
+                  </Link>
+                </div>
+                <div className="mt-3 h-px w-full max-w-xs bg-slate-800" />
+              </div>
 
-          {/* Resources section */}
-          <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Resources
-            </p>
-            <div className="flex flex-col gap-2 text-lg font-medium text-slate-50">
-              <Link href="#about" onClick={closeAll}>
-                About Coog Planner
-              </Link>
-              <Link href="/faq" onClick={closeAll}>
-                FAQ
-              </Link>
-              <Link href="/updates" onClick={closeAll}>
-                Updates
-              </Link>
-              <Link href="/privacy-legal" onClick={closeAll}>
-                Privacy &amp; legal
-              </Link>
+              {/* Coog Planner section */}
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Coog Planner
+                </p>
+                <div className="flex flex-col gap-2 text-lg font-medium text-slate-50">
+                  {navLinks
+                    .filter(
+                      (link) => link.showOnMobile && link.id !== "resources"
+                    )
+                    .map((link) => (
+                      <Link
+                        key={link.id}
+                        href={link.href ?? "#"}
+                        onClick={closeAll}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                </div>
+              </div>
+
+              {/* Resources section */}
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Resources
+                </p>
+                <div className="flex flex-col gap-2 text-lg font-medium text-slate-50">
+                  <Link href="/about" onClick={closeAll}>
+                    About Coog Planner
+                  </Link>
+                  <Link href="/faq" onClick={closeAll}>
+                    FAQ
+                  </Link>
+                  <Link href="/updates" onClick={closeAll}>
+                    Updates
+                  </Link>
+                  <Link href="/privacy-legal" onClick={closeAll}>
+                    Privacy &amp; legal
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

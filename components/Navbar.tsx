@@ -24,6 +24,11 @@ export default function Navbar() {
   const [activeMenu, setActiveMenu] = useState<MenuKey>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const browserExtensionUrl =
+    "https://chromewebstore.google.com/detail/cougar/dglodedcccgiclbjaknemgcmmolpocmn";
+
+  // --- nav links data ---
+
   const navLinks = [
     {
       id: "academics" as const,
@@ -34,19 +39,19 @@ export default function Navbar() {
     {
       id: "degree" as const,
       label: "My Degree",
-      href: "#analyze",
+      href: "/my-degree",
       showOnMobile: true,
     },
     {
       id: "rankings" as const,
       label: "Rankings",
-      href: "#leaderboards",
+      href: "/rankings",
       showOnMobile: true,
     },
     {
       id: "extension" as const,
       label: "Browser Extension",
-      href: "#browser-extension",
+      href: "/browser-extension",
       showOnMobile: true,
     },
     {
@@ -82,18 +87,7 @@ export default function Navbar() {
     },
   ];
 
-  const degreeItems: DesktopItem[] = [
-    {
-      title: "Get my degree analysis report",
-      desc: "Completion breakdown, remaining requirements, and timeline.",
-      href: "#analyze",
-    },
-    {
-      title: "How to download transcript",
-      desc: "View FAQ guide on how to get and download your free UH unofficial transcript.",
-      href: "/faq",
-    },
-  ];
+  const degreeItems: DesktopItem[] = [];
 
   // rankings has NO dropdown
   const rankingsItems: DesktopItem[] = [];
@@ -102,18 +96,18 @@ export default function Navbar() {
     {
       title: "Download extension",
       desc: "Add the Coog Planner overlay to your browser.",
-      href: "#browser-extension",
+      href: browserExtensionUrl,
     },
     {
       title: "How it works",
       desc: "Learn how pages are parsed safely and efficiently.",
-      href: "#browser-extension",
+      href: "/browser-extension",
     },
   ];
 
   const resourcesItems: DesktopItem[] = [
     {
-      title: "About Coog Planner",
+      title: "About",
       desc: "Background, mission, and who is building Coog Planner.",
       href: "/about",
     },
@@ -257,7 +251,21 @@ export default function Navbar() {
                     );
                   }
 
-                  // academics, degree, extension -> have dropdowns
+                  if (item.id === "degree") {
+                    // My Degree has NO dropdown; behaves like a normal link
+                    return (
+                      <Link
+                        key={item.id}
+                        href={item.href ?? "#"}
+                        className={`${baseClasses} ${stateClasses}`}
+                        onMouseEnter={() => openMenu(null)}
+                      >
+                        {item.label}
+                      </Link>
+                    );
+                  }
+
+                  // academics, extension -> have dropdowns
                   return (
                     <Link
                       key={item.id}
@@ -285,28 +293,35 @@ export default function Navbar() {
                 {desktopItems.length > 0 && (
                   <>
                     <div className="grid gap-4 md:grid-cols-2">
-                      {desktopItems.map((item) => (
-                        <Link
-                          key={item.title}
-                          href={item.href}
-                          className="group rounded-xl px-3 py-2 hover:bg-slate-900"
-                          onClick={closeAll}
-                        >
-                          <p className="text-sm font-semibold text-slate-50 group-hover:text-slate-50">
-                            {item.title}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-400">
-                            {item.desc}
-                          </p>
-                        </Link>
-                      ))}
+                      {desktopItems.map((item) => {
+                        const isExternal = item.href.startsWith("http");
+
+                        return (
+                          <Link
+                            key={item.title}
+                            href={item.href}
+                            className="group rounded-xl px-3 py-2 hover:bg-slate-900"
+                            onClick={closeAll}
+                            target={isExternal ? "_blank" : undefined}
+                            rel={isExternal ? "noopener noreferrer" : undefined}
+                          >
+                            <p className="text-sm font-semibold text-slate-50 group-hover:text-slate-50">
+                              {item.title}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-400">
+                              {item.desc}
+                            </p>
+                          </Link>
+                        );
+                      })}
                     </div>
 
                     {/* Academics footer message */}
                     {activeMenu === "academics" && (
                       <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-3 text-xs">
                         <span className="text-slate-400">
-                          New (beta): Degree planning recommendations.
+                          NEW: Degree planning recommendations (Beta / Testing
+                          Phase)
                         </span>
                         <Link
                           href="/updates"
@@ -325,7 +340,8 @@ export default function Navbar() {
                           Sponsor / donate to support CoogPlanner.
                         </span>
                         <Link
-                          href="/about"
+                          href="https://github.com/sponsors/kevintrinh1227"
+                          target="_blank"
                           className="ml-4 text-xs font-semibold text-red-400 hover:text-red-300"
                           onClick={closeAll}
                         >
@@ -430,7 +446,7 @@ export default function Navbar() {
                 </p>
                 <div className="flex flex-col gap-2 text-lg font-medium text-slate-50">
                   <Link href="/about" onClick={closeAll}>
-                    About Coog Planner
+                    About
                   </Link>
                   <Link href="/faq" onClick={closeAll}>
                     FAQ

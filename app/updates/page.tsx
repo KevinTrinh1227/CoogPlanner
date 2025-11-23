@@ -102,17 +102,14 @@ export default async function UpdatesPage() {
     : null;
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-10 lg:py-14">
+    <div className="mx-auto flex max-w-5xl flex-col gap-16 px-4 py-10 lg:py-14">
       {/* Hero / Intro */}
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg sm:p-8">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-900/80 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-300">
-            <span className="text-sm" aria-hidden>
-              📣
-            </span>
-            <span>Updates &amp; Changelog</span>
-          </div>
-          <p className="text-xs text-slate-400">
+      <section className="space-y-4">
+        <div>
+          <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-50 sm:text-3xl">
+            What&apos;s new in Coog Planner
+          </h1>
+          <p className="mt-1 text-xs text-slate-400">
             Last updated:{" "}
             <span className="font-medium text-slate-200">
               {formatDate(lastUpdated)}
@@ -120,11 +117,7 @@ export default async function UpdatesPage() {
           </p>
         </div>
 
-        <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-50 sm:text-3xl">
-          What&apos;s new in Coog Planner
-        </h1>
-
-        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-slate-300">
+        <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
           This page shows a history of changes to Coog Planner, including new
           features, improvements, bug fixes, and data updates. It also pulls in
           live activity from the GitHub repository so you can see what&apos;s
@@ -132,7 +125,7 @@ export default async function UpdatesPage() {
         </p>
 
         {/* Quick meta summary (3 consistent mini-cards) */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {/* Current version */}
           <div className="flex flex-col gap-1 rounded-xl border border-slate-800 bg-slate-950/60 p-3">
             <span className="inline-flex items-center gap-1 text-[0.7rem] font-semibold uppercase tracking-wide text-slate-400">
@@ -190,9 +183,9 @@ export default async function UpdatesPage() {
 
       {/* Latest release highlight (if any) */}
       {latestRelease && (
-        <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-6 sm:p-8">
-          <div className="flex items-start gap-3">
-            <div className="mt-1 rounded-xl bg-slate-900/80 p-2 text-lg">
+        <section className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+            <div className="mt-1 rounded-xl bg-slate-900/80 p-2 text-lg sm:mt-0">
               <span aria-hidden>✨</span>
             </div>
             <div className="flex flex-1 flex-col gap-2">
@@ -217,7 +210,7 @@ export default async function UpdatesPage() {
                     }`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-xs font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-1 text-xs font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                   >
                     <div className="h-9 w-9 overflow-hidden rounded-2xl border border-slate-700 bg-slate-800">
                       {(latestRelease as any).authorAvatarUrl ? (
@@ -258,7 +251,7 @@ export default async function UpdatesPage() {
               href={`${repoUrl}/releases`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             >
               <span aria-hidden>👀</span>
               <span>View latest releases</span>
@@ -268,7 +261,7 @@ export default async function UpdatesPage() {
               href={latestRelease.htmlUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             >
               <span aria-hidden>🔗</span>
               <span>View release {latestRelease.tagName}</span>
@@ -278,7 +271,7 @@ export default async function UpdatesPage() {
               <a
                 href={latestReleaseDownloadUrl}
                 download
-                className="inline-flex items-center gap-2 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-4 py-2 font-medium text-emerald-200 transition-all duration-150 hover:-translate-y-0.5 hover:border-emerald-400 hover:text-emerald-50 hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-emerald-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/60 bg-emerald-500/10 px-4 py-2 font-medium text-emerald-200 transition-all duration-150 hover:-translate-y-0.5 hover:border-emerald-400 hover:text-emerald-50 hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-emerald-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
               >
                 <span aria-hidden>⬇️</span>
                 <span>Download {latestRelease.tagName} ZIP</span>
@@ -289,25 +282,27 @@ export default async function UpdatesPage() {
       )}
 
       {/* Releases timeline */}
-      <section className="space-y-6 rounded-2xl border border-slate-800 bg-slate-950/60 p-6 sm:p-8">
-        <div className="flex items-start gap-3">
-          <div className="mt-1 rounded-xl bg-slate-900/80 p-2 text-lg">
-            <span aria-hidden>📦</span>
-          </div>
-          <div className="flex-1">
-            <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
-              Releases
-            </h2>
-            <p className="mt-1 text-sm text-slate-300">
-              Tagged versions of Coog Planner, pulled directly from GitHub
-              releases.
-            </p>
+      <section className="space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="mt-1 rounded-xl bg-slate-900/80 p-2 text-lg">
+              <span aria-hidden>📦</span>
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
+                Releases
+              </h2>
+              <p className="mt-1 text-sm text-slate-300">
+                Tagged versions of Coog Planner, pulled directly from GitHub
+                releases.
+              </p>
+            </div>
           </div>
           <a
             href={`${repoUrl}/releases`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-[0.7rem] font-medium uppercase tracking-wide text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            className="inline-flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-1 text-[0.7rem] font-medium uppercase tracking-wide text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
           >
             <span aria-hidden>👀</span>
             <span>View all on GitHub</span>
@@ -384,7 +379,7 @@ export default async function UpdatesPage() {
                       href={release.htmlUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-950 px-3 py-1 text-[0.7rem] font-medium uppercase tracking-wide text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                      className="inline-flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-950 px-3 py-1 text-[0.7rem] font-medium uppercase tracking-wide text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                     >
                       <span aria-hidden>🔗</span>
                       <span>Details</span>
@@ -404,7 +399,7 @@ export default async function UpdatesPage() {
       </section>
 
       {/* GitHub activity: commits, issues, PRs */}
-      <section className="space-y-6 rounded-2xl border border-slate-800 bg-slate-950/60 p-6 sm:p-8">
+      <section className="space-y-4">
         <div className="flex items-start gap-3">
           <div className="mt-1 rounded-xl bg-slate-900/80 p-2 text-lg">
             <span aria-hidden>🛠️</span>
@@ -442,14 +437,14 @@ export default async function UpdatesPage() {
                 appear here.
               </p>
             ) : (
-              <ul className="max-h-80 space-y-2 overflow-y-auto pr-1 text-xs">
-                {commits.map((commit) => (
+              <ul className="space-y-2 text-xs">
+                {commits.slice(0, 5).map((commit) => (
                   <li
                     key={commit.sha}
                     className="space-y-0.5 rounded-lg border border-slate-800/70 bg-slate-950/60 p-2"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-slate-800">
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-slate-800">
                         {commit.authorAvatarUrl ? (
                           <img
                             src={commit.authorAvatarUrl}
@@ -457,7 +452,7 @@ export default async function UpdatesPage() {
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <span className="text-sm" aria-hidden>
+                          <span className="text-xs" aria-hidden>
                             👤
                           </span>
                         )}
@@ -513,14 +508,14 @@ export default async function UpdatesPage() {
                 GitHub, they&apos;ll show up here.
               </p>
             ) : (
-              <ul className="max-h-80 space-y-2 overflow-y-auto pr-1 text-xs">
-                {issues.map((issue: IssueSummary) => (
+              <ul className="space-y-2 text-xs">
+                {issues.slice(0, 5).map((issue: IssueSummary) => (
                   <li
                     key={issue.id}
                     className="space-y-0.5 rounded-lg border border-slate-800/70 bg-slate-950/60 p-2"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-slate-800">
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-slate-800">
                         {(issue as any).authorAvatarUrl || issue.authorLogin ? (
                           <img
                             src={
@@ -532,7 +527,7 @@ export default async function UpdatesPage() {
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <span className="text-sm" aria-hidden>
+                          <span className="text-xs" aria-hidden>
                             👤
                           </span>
                         )}
@@ -592,14 +587,14 @@ export default async function UpdatesPage() {
                 they&apos;ll appear here.
               </p>
             ) : (
-              <ul className="max-h-80 space-y-2 overflow-y-auto pr-1 text-xs">
-                {pullRequests.map((pr: PullRequestSummary) => (
+              <ul className="space-y-2 text-xs">
+                {pullRequests.slice(0, 5).map((pr: PullRequestSummary) => (
                   <li
                     key={pr.id}
                     className="space-y-0.5 rounded-lg border border-slate-800/70 bg-slate-950/60 p-2"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-slate-800">
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-slate-800">
                         {(pr as any).authorAvatarUrl || pr.authorLogin ? (
                           <img
                             src={
@@ -611,7 +606,7 @@ export default async function UpdatesPage() {
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <span className="text-sm" aria-hidden>
+                          <span className="text-xs" aria-hidden>
                             👤
                           </span>
                         )}
@@ -674,11 +669,11 @@ export default async function UpdatesPage() {
       </section>
 
       {/* Feedback / contribution note */}
-      <section className="rounded-2xl border border-slate-800 bg-slate-950/80 p-5 text-sm text-slate-300 sm:p-6">
+      <section className="space-y-2 text-sm text-slate-300">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
           💬 Feedback, bugs &amp; contributions
         </h3>
-        <p className="mt-2 text-sm text-slate-300">
+        <p className="mt-1 text-sm text-slate-300">
           If you notice anything odd after a new update (missing course, weird
           requirement, buggy behavior, or a feature idea),{" "}
           <a
@@ -700,20 +695,20 @@ export default async function UpdatesPage() {
           </a>
           .
         </p>
-        <p className="mt-2 text-sm text-slate-300">
-          I strongly encourage contributions — new features, bug fixes, or
+        <p className="mt-1 text-sm text-slate-300">
+          I strongly encourage contributions - new features, bug fixes, or
           documentation improvements. When you open a PR or issue, your GitHub
           avatar and profile will show up in the activity feed, so you&apos;ll
           be visible both on the repo and on this site.
         </p>
 
         {/* Buttons row */}
-        <div className="mt-4 flex flex-wrap gap-3 text-xs sm:text-sm">
+        <div className="mt-3 flex flex-wrap gap-3 text-xs sm:text-sm">
           <a
             href={repoUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
           >
             <span aria-hidden>📁</span>
             <span>Open repo</span>
@@ -722,7 +717,7 @@ export default async function UpdatesPage() {
             href={`${repoUrl}/issues`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
           >
             <span aria-hidden>🐞</span>
             <span>View issues</span>
@@ -731,7 +726,7 @@ export default async function UpdatesPage() {
             href={`${repoUrl}/issues/new/choose`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
           >
             <span aria-hidden>➕</span>
             <span>Open new issue</span>
@@ -740,7 +735,7 @@ export default async function UpdatesPage() {
             href={`${repoUrl}/pulls`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
           >
             <span aria-hidden>🔀</span>
             <span>View pull requests</span>

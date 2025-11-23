@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SearchBar() {
+  const router = useRouter();
   const [filtersOpen, setFiltersOpen] = useState(false);
+
   const [filters, setFilters] = useState({
     courses: true,
     instructors: true,
@@ -22,10 +25,6 @@ export default function SearchBar() {
   // Example data (placeholder)
   const courseExamples = [
     {
-      code: "COSC 3360",
-      title: "Operating Systems",
-    },
-    {
       code: "COSC 3320",
       title: "Algorithms and Data Structures",
     },
@@ -33,17 +32,9 @@ export default function SearchBar() {
       code: "COSC 3380",
       title: "Design File and Database Systems",
     },
-    {
-      code: "COSC 1336",
-      title: "Programming Fundamentals",
-    },
   ];
 
   const instructorExamples = [
-    {
-      name: "Jaspal Subhlok",
-      subtitle: "Professor · Computer Science",
-    },
     {
       name: "Shishir Shah",
       subtitle: "Professor · Computer Science",
@@ -58,10 +49,6 @@ export default function SearchBar() {
     {
       name: "Computer Science B.S.",
       subtitle: "College of Natural Sciences & Mathematics",
-    },
-    {
-      name: "Mechanical Engineering B.S.",
-      subtitle: "Cullen College of Engineering",
     },
     {
       name: "Psychology B.A.",
@@ -99,7 +86,7 @@ export default function SearchBar() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setShowSuggestions(true)}
-                className="h-full w-full bg-transparent pl-9 pr-2 text-sm text-slate-50 placeholder:text-slate-500 focus:outline-none"
+                className="h-full w-full bg-transparent pl-9 pr-2 text-[16px] md:text-sm text-slate-50 placeholder:text-slate-500 focus:outline-none"
               />
 
               {/* Search icon on the left */}
@@ -208,8 +195,16 @@ export default function SearchBar() {
                     type="button"
                     className="w-full rounded-lg px-1 py-1.5 text-left hover:bg-slate-900"
                     onClick={() => {
-                      setQuery(`${course.code} ${course.title}`);
                       setShowSuggestions(false);
+
+                      const label = `${course.code}: ${course.title}`;
+                      setQuery(label);
+
+                      if (course.code === "COSC 3320") {
+                        // Build slug: "COSC 3320" -> "COSC-3320" (keeps uppercase)
+                        const slug = course.code.replace(/\s+/g, "-");
+                        router.push(`/courses/${slug}`);
+                      }
                     }}
                   >
                     <p className="text-sm font-semibold text-slate-50">

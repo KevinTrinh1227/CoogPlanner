@@ -37,7 +37,7 @@ export default function CoursesPage() {
             <span>Browse Courses</span>
           </div>
           <p className="text-xs text-slate-400">
-            Showing placeholder UH courses — search & filters coming soon.
+            Showing placeholder UH courses - search & filters coming soon.
           </p>
         </div>
 

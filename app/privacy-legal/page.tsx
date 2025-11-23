@@ -12,25 +12,22 @@ export default function PrivacyLegalPage() {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-10 lg:py-14">
       {/* Hero / Intro */}
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg sm:p-8">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-900/80 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-300">
-            <span className="text-sm" aria-hidden>
-              🔒
-            </span>
-            <span>Privacy &amp; Legal</span>
-          </div>
-          <p className="text-xs text-slate-400">
-            Last updated:{" "}
-            <span className="font-medium text-slate-200">November 2025</span>
-          </p>
+      <section>
+        <div className="flex items-center gap-3">
+          <span className="text-2xl" aria-hidden>
+            🔒
+          </span>
+          <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-50 sm:text-3xl">
+            Privacy &amp; Legal
+          </h1>
         </div>
 
-        <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-50 sm:text-3xl">
-          How Coog Planner handles your data and the ground rules for using it
-        </h1>
+        <p className="mt-1 text-xs text-slate-400">
+          Last updated:{" "}
+          <span className="font-medium text-slate-200">November 2025</span>
+        </p>
 
-        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-slate-300">
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300">
           This page explains how Coog Planner collects and uses information, and
           the legal terms that apply when you use the site. We also clarify that
           Coog Planner is an{" "}
@@ -42,17 +39,17 @@ export default function PrivacyLegalPage() {
         </p>
 
         {/* Quick nav */}
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-5 flex flex-wrap gap-3">
           <a
             href="#privacy-policy"
-            className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/70 px-4 py-2 text-xs font-medium text-slate-100 hover:border-brand-light/80 hover:text-brand-light transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2 text-xs font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:bg-slate-900/90 hover:text-brand-light"
           >
             <span aria-hidden>🔒</span>
             <span>Jump to Privacy Policy</span>
           </a>
           <a
             href="#legal-terms"
-            className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/70 px-4 py-2 text-xs font-medium text-slate-100 hover:border-brand-light/80 hover:text-brand-light transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2 text-xs font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:bg-slate-900/90 hover:text-brand-light"
           >
             <span aria-hidden>⚖️</span>
             <span>Jump to Legal &amp; Terms</span>
@@ -61,10 +58,7 @@ export default function PrivacyLegalPage() {
       </section>
 
       {/* Privacy Policy */}
-      <section
-        id="privacy-policy"
-        className="space-y-6 rounded-2xl border border-slate-800 bg-slate-950/60 p-6 sm:p-8"
-      >
+      <section id="privacy-policy" className="space-y-6 pt-6">
         <div className="flex items-start gap-3">
           <div className="mt-1 rounded-xl bg-slate-900/80 p-2 text-lg">
             <span aria-hidden>🔒</span>
@@ -368,10 +362,7 @@ export default function PrivacyLegalPage() {
       </section>
 
       {/* Legal & Terms */}
-      <section
-        id="legal-terms"
-        className="space-y-6 rounded-2xl border border-slate-800 bg-slate-950/60 p-6 sm:p-8"
-      >
+      <section id="legal-terms" className="space-y-6 pt-6">
         <div className="flex items-start gap-3">
           <div className="mt-1 rounded-xl bg-slate-900/80 p-2 text-lg">
             <span aria-hidden>⚖️</span>
@@ -566,7 +557,7 @@ export default function PrivacyLegalPage() {
       </section>
 
       {/* Contact / footer note */}
-      <section className="rounded-2xl border border-slate-800 bg-slate-950/80 p-5 text-sm text-slate-300 sm:p-6">
+      <section className="pt-4 text-sm text-slate-300">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
           Questions about this page?
         </h3>

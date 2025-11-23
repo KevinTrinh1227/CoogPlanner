@@ -1,6 +1,7 @@
 // app/courses/[code]/page.tsx
 import { notFound } from "next/navigation";
 import { getCourseByCode, type Course, type GradeBucket } from "@/lib/courses";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 
 type CoursePageProps = {
   // ⚠️ params is now a Promise in async server components
@@ -19,17 +20,17 @@ const gradeColors: Record<string, string> = {
 };
 
 function formatPercent(value: number | null): string {
-  if (value == null) return "—";
+  if (value == null) return "-";
   return `${value.toFixed(0)}%`;
 }
 
 function formatNumber(value: number | null): string {
-  if (value == null) return "—";
+  if (value == null) return "-";
   return value.toLocaleString();
 }
 
 function formatGpa(value: number | null): string {
-  if (value == null) return "—";
+  if (value == null) return "-";
   return value.toFixed(2);
 }
 
@@ -165,9 +166,9 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
     course.catalog.creditHours != null ||
     course.catalog.lectureHours != null ||
     course.catalog.labHours != null
-      ? `Credit Hours: ${course.catalog.creditHours ?? "—"} (Lecture Hours: ${
-          course.catalog.lectureHours ?? "—"
-        } · Lab Hours: ${course.catalog.labHours ?? "—"})`
+      ? `Credit Hours: ${course.catalog.creditHours ?? "-"} (Lecture Hours: ${
+          course.catalog.lectureHours ?? "-"
+        } · Lab Hours: ${course.catalog.labHours ?? "-"})`
       : "";
 
   const snapshot = course.snapshot;
@@ -184,6 +185,15 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
 
   return (
     <div className="space-y-6 py-8 md:py-10">
+      <PageBreadcrumb
+        crumbs={[
+          { label: "Courses", href: "/courses" },
+          { label: displayCode },
+        ]}
+        showStarAndCart
+        className="mb-3"
+      />
+
       {/* Top hero – no card wrapper */}
       <section className="border-b border-slate-800 pb-6">
         <div className="space-y-3">
@@ -538,7 +548,7 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
                   </p>
                 </div>
                 <p className="text-xs font-semibold text-rose-300">
-                  {section.gpa != null ? section.gpa.toFixed(2) : "—"} GPA
+                  {section.gpa != null ? section.gpa.toFixed(2) : "-"} GPA
                 </p>
               </div>
 
@@ -547,31 +557,31 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
                   <span className="text-slate-400">Enrolled:</span>{" "}
                   {section.enrolled != null
                     ? section.enrolled.toLocaleString()
-                    : "—"}
+                    : "-"}
                 </p>
                 <p>
                   <span className="text-slate-400">A:</span>{" "}
-                  {section.letters?.A ?? "—"}
+                  {section.letters?.A ?? "-"}
                 </p>
                 <p>
                   <span className="text-slate-400">B:</span>{" "}
-                  {section.letters?.B ?? "—"}
+                  {section.letters?.B ?? "-"}
                 </p>
                 <p>
                   <span className="text-slate-400">C:</span>{" "}
-                  {section.letters?.C ?? "—"}
+                  {section.letters?.C ?? "-"}
                 </p>
                 <p>
                   <span className="text-slate-400">D:</span>{" "}
-                  {section.letters?.D ?? "—"}
+                  {section.letters?.D ?? "-"}
                 </p>
                 <p>
                   <span className="text-slate-400">F:</span>{" "}
-                  {section.letters?.F ?? "—"}
+                  {section.letters?.F ?? "-"}
                 </p>
                 <p>
                   <span className="text-slate-400">W:</span>{" "}
-                  {section.letters?.W ?? "—"}
+                  {section.letters?.W ?? "-"}
                 </p>
               </div>
             </div>
@@ -614,30 +624,30 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
                     <td className="py-2.5 px-2 md:px-3">
                       {section.enrolled != null
                         ? section.enrolled.toLocaleString()
-                        : "—"}
+                        : "-"}
                     </td>
 
                     <td className="py-2.5 px-2 md:px-3">
-                      {section.letters?.A ?? "—"}
+                      {section.letters?.A ?? "-"}
                     </td>
                     <td className="py-2.5 px-2 md:px-3">
-                      {section.letters?.B ?? "—"}
+                      {section.letters?.B ?? "-"}
                     </td>
                     <td className="py-2.5 px-2 md:px-3">
-                      {section.letters?.C ?? "—"}
+                      {section.letters?.C ?? "-"}
                     </td>
                     <td className="py-2.5 px-2 md:px-3">
-                      {section.letters?.D ?? "—"}
+                      {section.letters?.D ?? "-"}
                     </td>
                     <td className="py-2.5 px-2 md:px-3">
-                      {section.letters?.F ?? "—"}
+                      {section.letters?.F ?? "-"}
                     </td>
                     <td className="py-2.5 px-2 md:px-3">
-                      {section.letters?.W ?? "—"}
+                      {section.letters?.W ?? "-"}
                     </td>
 
                     <td className="rounded-r-xl py-2.5 px-2 md:px-3">
-                      {section.gpa != null ? section.gpa.toFixed(2) : "—"}
+                      {section.gpa != null ? section.gpa.toFixed(2) : "-"}
                     </td>
                   </tr>
                 ))}

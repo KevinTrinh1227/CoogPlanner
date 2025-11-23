@@ -8,7 +8,7 @@ import Tooltip from "@/components/Tooltip";
 export default async function Footer() {
   const repoMeta = await getRepoMeta();
 
-  const shortSha = repoMeta?.latestCommitSha?.slice(0, 7).toLowerCase() ?? "—";
+  const shortSha = repoMeta?.latestCommitSha?.slice(0, 7).toLowerCase() ?? "-";
   const version = repoMeta?.latestTag ?? "v0.0.0-dev";
 
   const githubRepoUrl = `https://github.com/${siteConfig.github.owner}/${siteConfig.github.repo}`;

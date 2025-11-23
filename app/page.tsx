@@ -23,7 +23,7 @@ export default function Home() {
             </h1>
             <p className="max-w-xl text-sm leading-relaxed text-slate-300 md:text-[15px]">
               Coog Planner suggests semesters around your work hours and
-              preferences — finding UH classes that satisfy degree requirements,
+              preferences - finding UH classes that satisfy degree requirements,
               keep work loads light when you need it, and finds/suggests easier
               options you might have missed.
             </p>
@@ -212,6 +212,306 @@ export default function Home() {
             semester as you drag courses between terms.
           </li>
         </ul>
+      </section>
+
+      {/* Example student scenario */}
+      <section id="how-it-works" className="space-y-5">
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-50">
+            Example: How Coog Planner fits a real UH student
+          </h2>
+          <p className="text-xs text-slate-400">
+            Follow a simple path from a student&apos;s real constraints to a
+            Coog Planner–powered schedule that respects work, difficulty, and
+            graduation goals.
+          </p>
+        </div>
+
+        {/* Unified, modern timeline card */}
+        <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 sm:p-5">
+          {/* Horizontal stepper */}
+          <div className="space-y-3">
+            <div className="flex flex-col gap-3 text-[10px] text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+              {/* Start */}
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-500 bg-slate-900 text-[11px] text-slate-100">
+                  0
+                </div>
+                <span>Start</span>
+              </div>
+
+              <div className="hidden flex-1 sm:block">
+                <div className="mx-auto h-px w-full max-w-xs bg-slate-800" />
+              </div>
+
+              {/* Input */}
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-500 bg-slate-900 text-[11px] text-slate-100">
+                  1
+                </div>
+                <span>Input</span>
+              </div>
+
+              <div className="hidden flex-1 sm:block">
+                <div className="mx-auto h-px w-full max-w-xs bg-slate-800" />
+              </div>
+
+              {/* Understand */}
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-500 bg-slate-900 text-[11px] text-slate-100">
+                  2
+                </div>
+                <span>Understand</span>
+              </div>
+
+              <div className="hidden flex-1 sm:block">
+                <div className="mx-auto h-px w-full max-w-xs bg-slate-800" />
+              </div>
+
+              {/* Plan */}
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-500 bg-slate-900 text-[11px] text-slate-100">
+                  3
+                </div>
+                <span>Plan</span>
+              </div>
+
+              <div className="hidden flex-1 sm:block">
+                <div className="mx-auto h-px w-full max-w-xs bg-slate-800" />
+              </div>
+
+              {/* Outcome */}
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-emerald-400 bg-emerald-500/10 text-[11px] text-emerald-200">
+                  4
+                </div>
+                <span className="text-emerald-300">Outcome</span>
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-500">
+              We start from Kevin&apos;s real situation and end with a plan that
+              balances difficulty, work hours, and an on-time graduation.
+            </p>
+          </div>
+
+          {/* Step 0 · Student profile */}
+          <div className="space-y-3 rounded-xl border border-slate-800 bg-slate-900/70 p-3 sm:p-4 text-[11px] text-slate-300">
+            <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-300">
+                <span aria-hidden>👤</span>
+                <span>Step 0 · Student profile</span>
+              </span>
+              <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-medium text-emerald-300">
+                Target grad: Spring 2027
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-xl">
+                <span aria-hidden>🧑‍💻</span>
+              </div>
+              <div className="flex min-w-[12rem] flex-col">
+                <p className="text-sm font-semibold text-slate-100">
+                  Kevin Trinh
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  B.S. Computer Science · UH Main Campus
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1 rounded-lg border border-slate-800 bg-slate-950/80 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                  Academic snapshot
+                </p>
+                <ul className="space-y-1">
+                  <li>• ~55 completed credit hours</li>
+                  <li>• Current GPA: 3.32 (aiming for 3.5+)</li>
+                  <li>• On track for B.S. Computer Science</li>
+                </ul>
+              </div>
+              <div className="space-y-1 rounded-lg border border-slate-800 bg-slate-950/80 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                  Life &amp; obligations
+                </p>
+                <ul className="space-y-1">
+                  <li>• Works ~30 hours/week off-campus</li>
+                  <li>• Long commute to UH</li>
+                  <li>• Needs time for interview prep &amp; projects</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="space-y-1 rounded-lg border border-slate-800 bg-slate-950/80 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                Preferences
+              </p>
+              <ul className="space-y-1">
+                <li>
+                  • Avoid stacking multiple &quot;hard&quot; CS classes together
+                </li>
+                <li>• Pair tougher CS with lighter cores when possible</li>
+                <li>• Prefer not to be on campus super late</li>
+              </ul>
+            </div>
+
+            <div className="space-y-1 rounded-lg border border-dashed border-emerald-500/40 bg-emerald-500/5 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-300">
+                Core problem
+              </p>
+              <p className="text-[11px] text-slate-100">
+                &quot;How do I pick classes so I can work 30 hours, keep my GPA
+                climbing, and still graduate around Spring 2027 — without
+                guessing every term?&quot;
+              </p>
+            </div>
+          </div>
+
+          {/* Step 1 · Input */}
+          <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-900/70 p-3 sm:p-4 text-[11px] text-slate-300">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-950 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-300">
+                <span aria-hidden>①</span>
+                <span>Step 1 · Kevin&apos;s input</span>
+              </span>
+              <span className="text-[10px] text-slate-500">
+                Coog Planner starts here
+              </span>
+            </div>
+            <p>
+              Kevin uploads his{" "}
+              <span className="font-semibold">unofficial transcript (PDF)</span>{" "}
+              and selects{" "}
+              <span className="font-semibold">B.S. Computer Science</span> with
+              a goal of about{" "}
+              <span className="font-semibold">4 more semesters</span> before
+              graduating.
+            </p>
+            <p className="text-[10px] text-slate-500">
+              In the product, this matches the fields on the{" "}
+              <span className="font-semibold text-slate-300">My Degree</span>{" "}
+              page — upload → choose degree → choose rough timeline.
+            </p>
+          </div>
+
+          {/* Step 2 · Understand */}
+          <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-900/70 p-3 sm:p-4 text-[11px] text-slate-300">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-950 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-300">
+                <span aria-hidden>②</span>
+                <span>Step 2 · Coog Planner understands</span>
+              </span>
+            </div>
+            <p>
+              Coog Planner parses the transcript and builds a summary of where
+              Kevin is in his degree and what constraints matter.
+            </p>
+            <div className="mt-2 space-y-2 rounded-lg border border-slate-800 bg-slate-950/80 p-3">
+              <div className="flex flex-wrap gap-1.5">
+                <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-200">
+                  ✅ Completed CS + math foundation
+                </span>
+                <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-200">
+                  ⏳ Remaining: upper-level CS
+                </span>
+                <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-200">
+                  📚 Remaining: 2–3 core classes
+                </span>
+                <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-200">
+                  💼 30 hr/week work constraint
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-500">
+                These chips are basically{" "}
+                <span className="font-semibold text-slate-300">
+                  how the system describes you
+                </span>{" "}
+                after reading your transcript and preferences.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 3 · Plan */}
+          <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-900/70 p-3 sm:p-4 text-[11px] text-slate-300">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-950 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-300">
+                <span aria-hidden>③</span>
+                <span>Step 3 · Suggested term layout</span>
+              </span>
+              <span className="rounded-full bg-red-400/10 px-2.5 py-0.5 text-[10px] font-medium text-red-300">
+                Plan preview 🚀
+              </span>
+            </div>
+            <p>
+              Based on Kevin&apos;s history, constraints, and target timeline,
+              Coog Planner suggests a next-semester mix.
+            </p>
+            <div className="mt-2 space-y-1 rounded-lg border border-slate-800 bg-slate-950/80 p-3">
+              <div className="flex items-center justify-between gap-2 text-[11px] text-slate-200">
+                <span>Example next term</span>
+                <span className="text-[10px] text-slate-400">
+                  12–15 hrs · light/medium mix
+                </span>
+              </div>
+              <ul className="mt-1 space-y-1">
+                <li>
+                  <span className="font-semibold">COSC 2436</span> · Major ·
+                  &quot;medium&quot; difficulty
+                </li>
+                <li>
+                  <span className="font-semibold">COSC 3320</span> · Major ·
+                  taken with a lighter core
+                </li>
+                <li>
+                  <span className="font-semibold">PHIL 1301</span> · Core ·
+                  historically easier option to balance the term
+                </li>
+                <li>
+                  <span className="font-semibold">MATH 2318</span> · Needed for
+                  later CS courses
+                </li>
+              </ul>
+            </div>
+            <p className="text-[10px] text-slate-500">
+              In the real UI, each row shows tags like &quot;Major&quot; /
+              &quot;Core&quot; and a difficulty hint, so even if you don&apos;t
+              know the course yet, you know why it&apos;s recommended.
+            </p>
+          </div>
+
+          {/* Step 4 · Outcome */}
+          <div className="space-y-2 rounded-xl border border-emerald-500/60 bg-emerald-500/5 p-3 sm:p-4 text-[11px] text-slate-300">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-200">
+                <span aria-hidden>④</span>
+                <span>End · Outcome</span>
+              </span>
+            </div>
+            <ul className="mt-1 space-y-1">
+              <li>
+                • Mix of 1 hard CS, 2 medium, 1 lighter core — realistic with a
+                30 hr/week job.
+              </li>
+              <li>
+                •{" "}
+                <span className="font-semibold">
+                  Still on track for Spring 2027
+                </span>{" "}
+                graduation instead of silently slipping a term.
+              </li>
+              <li>
+                • Easier courses are chosen that{" "}
+                <span className="font-semibold">boost GPA</span> while still
+                fulfilling real degree requirements.
+              </li>
+              <li>
+                • Kevin can drag classes between terms to explore &quot;hard now
+                vs. hard later&quot; without constantly redoing spreadsheets.
+              </li>
+            </ul>
+          </div>
+        </div>
       </section>
     </div>
   );

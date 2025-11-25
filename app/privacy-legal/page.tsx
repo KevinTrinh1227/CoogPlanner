@@ -1,6 +1,7 @@
 // app/privacy-legal/page.tsx
 
 import type { Metadata } from "next";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 
 export const metadata: Metadata = {
   title: "Privacy & Legal | Coog Planner",
@@ -10,22 +11,23 @@ export const metadata: Metadata = {
 
 export default function PrivacyLegalPage() {
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-10 lg:py-14">
+    <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-10 scroll-smooth lg:py-14">
+      {/* Breadcrumb */}
+      <PageBreadcrumb
+        crumbs={[{ label: "Privacy & legal" }]}
+        showStarAndCart={false}
+        className="mb-3"
+      />
+
       {/* Hero / Intro */}
       <section>
         <div className="flex items-center gap-3">
-          <span className="text-2xl" aria-hidden>
-            🔒
-          </span>
           <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-50 sm:text-3xl">
-            Privacy &amp; Legal
+            🛡️ Privacy &amp; Legal
           </h1>
         </div>
 
-        <p className="mt-1 text-xs text-slate-400">
-          Last updated:{" "}
-          <span className="font-medium text-slate-200">November 2025</span>
-        </p>
+        {/* Removed "Last updated" line */}
 
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300">
           This page explains how Coog Planner collects and uses information, and
@@ -58,25 +60,29 @@ export default function PrivacyLegalPage() {
       </section>
 
       {/* Privacy Policy */}
-      <section id="privacy-policy" className="space-y-6 pt-6">
-        <div className="flex items-start gap-3">
-          <div className="mt-1 rounded-xl bg-slate-900/80 p-2 text-lg">
-            <span aria-hidden>🔒</span>
-          </div>
-          <div>
+      <section
+        id="privacy-policy"
+        className="space-y-6 pt-6 scroll-mt-28 md:scroll-mt-32"
+      >
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <div className="mt-1 rounded-xl bg-slate-900/80 p-2 text-lg">
+              <span aria-hidden>🔒</span>
+            </div>
             <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
               Privacy Policy
             </h2>
-            <p className="mt-1 text-sm text-slate-300">
-              How we collect, use, and protect your information when you use
-              Coog Planner.
-            </p>
           </div>
+          {/* subtitle now flush-left */}
+          <p className="text-sm text-slate-300">
+            How we collect, use, and protect your information when you use Coog
+            Planner.
+          </p>
         </div>
 
         {/* TL;DR summary */}
-        <div className="flex gap-3 rounded-xl border border-slate-700/80 bg-slate-900/80 p-4">
-          <div className="mt-0.5 text-lg" aria-hidden>
+        <div className="flex gap-3 rounded-xl border border-slate-700/80 bg-slate-900/80 p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/70 hover:bg-slate-900/90 hover:shadow-md">
+          <div className="mt-0 text-md" aria-hidden>
             ℹ️
           </div>
           <div className="space-y-1 text-sm text-slate-200">
@@ -145,7 +151,7 @@ export default function PrivacyLegalPage() {
               3. Information we collect
             </h3>
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+              <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/70 hover:bg-slate-900/90 hover:shadow-md">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Information you provide
                 </p>
@@ -167,7 +173,7 @@ export default function PrivacyLegalPage() {
                 </ul>
               </div>
 
-              <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+              <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/70 hover:bg-slate-900/90 hover:shadow-md">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Information collected automatically
                 </p>
@@ -308,23 +314,17 @@ export default function PrivacyLegalPage() {
                 feature is available.
               </li>
               <li>
-                Contact us if you have questions about your data or want to
-                request additional deletion.
+                Contact us using the support/contact options provided inside the
+                app or on the main Coog Planner site if you have questions about
+                your data or want to request additional deletion.
               </li>
             </ul>
-            <p className="mt-1">
-              You can reach us at{" "}
-              <span className="font-mono text-slate-100">
-                support@coogplanner.com
-              </span>{" "}
-              (example address – update to your real one).
-            </p>
           </div>
 
           {/* Unofficial tool disclaimer */}
-          <div className="space-y-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-amber-50">
+          <div className="space-y-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-amber-50 transition-all duration-150 hover:-translate-y-0.5 hover:border-amber-400/70 hover:bg-amber-500/15 hover:shadow-md">
             <div className="flex items-start gap-2">
-              <div className="mt-0.5 text-lg" aria-hidden>
+              <div className="mt-0 text-md" aria-hidden>
                 ⚠️
               </div>
               <div>
@@ -353,34 +353,37 @@ export default function PrivacyLegalPage() {
             </h3>
             <p>
               We may update this Privacy Policy from time to time. When we do,
-              we&apos;ll update the &quot;Last updated&quot; date at the top of
-              this page and may provide additional notice in the app if changes
-              are significant.
+              we&apos;ll adjust the date information shown in the app or provide
+              other reasonable notice if changes are significant.
             </p>
           </div>
         </div>
       </section>
 
       {/* Legal & Terms */}
-      <section id="legal-terms" className="space-y-6 pt-6">
-        <div className="flex items-start gap-3">
-          <div className="mt-1 rounded-xl bg-slate-900/80 p-2 text-lg">
-            <span aria-hidden>⚖️</span>
-          </div>
-          <div>
+      <section
+        id="legal-terms"
+        className="space-y-6 pt-6 scroll-mt-28 md:scroll-mt-32"
+      >
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <div className="mt-1 rounded-xl bg-slate-900/80 p-2 text-lg">
+              <span aria-hidden>⚖️</span>
+            </div>
             <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
               Legal Notices &amp; Terms
             </h2>
-            <p className="mt-1 text-sm text-slate-300">
-              Key legal disclaimers, acceptable use, and limitations of
-              liability for using Coog Planner.
-            </p>
           </div>
+          {/* subtitle now flush-left */}
+          <p className="text-sm text-slate-300">
+            Key legal disclaimers, acceptable use, and limitations of liability
+            for using Coog Planner.
+          </p>
         </div>
 
         {/* TL;DR summary */}
-        <div className="flex gap-3 rounded-xl border border-slate-700/80 bg-slate-900/80 p-4">
-          <div className="mt-0.5 text-lg" aria-hidden>
+        <div className="flex gap-3 rounded-xl border border-slate-700/80 bg-slate-900/80 p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/70 hover:bg-slate-900/90 hover:shadow-md">
+          <div className="mt-0 text-md" aria-hidden>
             ℹ️
           </div>
           <div className="space-y-1 text-sm text-slate-200">
@@ -402,9 +405,9 @@ export default function PrivacyLegalPage() {
 
         <div className="space-y-6 text-sm leading-relaxed text-slate-300">
           {/* Non-affiliation */}
-          <div className="space-y-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-amber-50">
+          <div className="space-y-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-amber-50 transition-all duration-150 hover:-translate-y-0.5 hover:border-amber-400/70 hover:bg-amber-500/15 hover:shadow-md">
             <div className="flex items-start gap-2">
-              <div className="mt-0.5 text-lg" aria-hidden>
+              <div className="mt-0 text-md" aria-hidden>
                 ⚠️
               </div>
               <div>
@@ -542,7 +545,7 @@ export default function PrivacyLegalPage() {
           </div>
 
           {/* Not legal advice */}
-          <div className="space-y-2 rounded-xl border border-slate-700/80 bg-slate-900/80 p-4">
+          <div className="space-y-2 rounded-xl border border-slate-700/80 bg-slate-900/80 p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/70 hover:bg-slate-900 hover:shadow-md">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
               9. Not legal advice
             </p>
@@ -556,21 +559,7 @@ export default function PrivacyLegalPage() {
         </div>
       </section>
 
-      {/* Contact / footer note */}
-      <section className="pt-4 text-sm text-slate-300">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-          Questions about this page?
-        </h3>
-        <p className="mt-2">
-          If you have questions about how Coog Planner handles your data or
-          about these terms, you can reach out at{" "}
-          <span className="font-mono text-slate-100">
-            support@coogplanner.com
-          </span>{" "}
-          (replace with your real contact). We&apos;re happy to clarify how
-          things work.
-        </p>
-      </section>
+      {/* Removed bottom "Questions about this page?" contact section */}
     </div>
   );
 }

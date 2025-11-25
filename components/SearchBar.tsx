@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function SearchBar() {
   const router = useRouter();
+  const pathname = usePathname();
+
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const [filters, setFilters] = useState({
@@ -55,6 +57,61 @@ export default function SearchBar() {
       subtitle: "College of Liberal Arts & Social Sciences",
     },
   ];
+
+  // Keep the search query in sync with the current route.
+  // On course/instructor/program detail pages, show a label.
+  // On all other pages, clear the input.
+  useEffect(() => {
+    if (!pathname) {
+      setQuery("");
+      return;
+    }
+
+    // Course detail: /courses/[code-slug]
+    if (pathname.startsWith("/courses/")) {
+      const slug = pathname.split("/")[2] ?? "";
+      const match = courseExamples.find(
+        (course) => course.code.replace(/\s+/g, "-") === slug
+      );
+
+      if (match) {
+        setQuery(`${match.code}: ${match.title}`);
+        return;
+      }
+    }
+
+    // Instructor detail: /instructors/[slug]
+    if (pathname.startsWith("/instructors/")) {
+      const slug = decodeURIComponent(pathname.split("/")[2] ?? "");
+      const match = instructorExamples.find(
+        (inst) =>
+          inst.name.toLowerCase().replace(/\s+/g, "-") === slug.toLowerCase()
+      );
+
+      if (match) {
+        setQuery(match.name);
+        return;
+      }
+    }
+
+    // Program / degree detail: /programs/[slug]
+    if (pathname.startsWith("/programs/")) {
+      const slug = decodeURIComponent(pathname.split("/")[2] ?? "");
+      const match = programExamples.find(
+        (prog) =>
+          prog.name.toLowerCase().replace(/\s+/g, "-") === slug.toLowerCase()
+      );
+
+      if (match) {
+        setQuery(match.name);
+        return;
+      }
+    }
+
+    // All other routes (or no match) -> clear search bar
+    setQuery("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   // Close filters & suggestions when clicking outside
   useEffect(() => {

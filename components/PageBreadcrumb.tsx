@@ -85,12 +85,12 @@ export function PageBreadcrumb({
 
   return (
     <div
-      className={`flex flex-col gap-2 text-sm text-slate-400 md:flex-row md:items-center md:justify-between md:text-[15px] ${
+      className={`flex flex-wrap items-center gap-2 text-sm text-slate-400 md:flex-nowrap md:items-center md:justify-between md:text-[15px] ${
         className ?? ""
       }`}
     >
-      {/* RIGHT on desktop / TOP on mobile: action buttons */}
-      <div className="order-1 flex flex-wrap items-center gap-1.5 md:order-2 md:justify-end">
+      {/* RIGHT on desktop / INLINE or BELOW on mobile: action buttons */}
+      <div className="order-2 flex flex-wrap items-center gap-1.5 md:order-2 md:justify-end">
         {showStarAndCart && (
           <>
             <button
@@ -124,8 +124,8 @@ export function PageBreadcrumb({
         </button>
       </div>
 
-      {/* LEFT on desktop / BOTTOM on mobile: breadcrumb trail */}
-      <div className="order-2 flex min-w-0 items-center gap-1 overflow-x-auto whitespace-nowrap md:order-1">
+      {/* LEFT on desktop / INLINE ABOVE buttons on mobile when wrapping: breadcrumb trail */}
+      <div className="order-1 flex min-w-0 flex-1 items-center gap-1 overflow-x-auto whitespace-nowrap md:order-1">
         {/* Root: Home */}
         <Link href="/" className={clickableCrumbClasses} title="Go to Home">
           Home

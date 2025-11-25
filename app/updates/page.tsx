@@ -2,6 +2,7 @@
 
 import type { Metadata } from "next";
 import { siteConfig } from "@/config/site";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import {
   getGithubOverview,
   type ReleaseSummary,
@@ -102,19 +103,20 @@ export default async function UpdatesPage() {
     : null;
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-16 px-4 py-10 lg:py-14">
+    <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-10 lg:py-14">
+      {/* Breadcrumb */}
+      <PageBreadcrumb
+        crumbs={[{ label: "Updates & changelog" }]}
+        showStarAndCart={false}
+        className="mb-3"
+      />
+
       {/* Hero / Intro */}
       <section className="space-y-4">
         <div>
           <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-50 sm:text-3xl">
-            What&apos;s new in Coog Planner
+            🛠️ What&apos;s New In Coog Planner
           </h1>
-          <p className="mt-1 text-xs text-slate-400">
-            Last updated:{" "}
-            <span className="font-medium text-slate-200">
-              {formatDate(lastUpdated)}
-            </span>
-          </p>
         </div>
 
         <p className="max-w-3xl text-sm leading-relaxed text-slate-300">

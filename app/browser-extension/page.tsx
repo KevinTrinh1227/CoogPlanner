@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { siteConfig } from "@/config/site";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 
 // TODO: replace these placeholder URLs with your real links
 const CHROME_WEB_STORE_URL =
@@ -19,13 +20,19 @@ export default function BrowserExtensionPage() {
       id="browser-extension"
       className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8"
     >
+      {/* Breadcrumb – sits at the very top */}
+      <PageBreadcrumb
+        crumbs={[{ label: "Browser extension" }]}
+        showStarAndCart={false}
+        className="mb-3"
+      />
+
       {/* Header */}
       <header className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Browser Extension
-        </p>
+        {/* Removed the small 'Browser Extension' label here */}
+
         <h1 className="text-3xl font-semibold tracking-tight text-slate-50 sm:text-4xl">
-          Coog Planner browser extension 💻
+          💻 Coog Planner Browser Extension
         </h1>
         <p className="max-w-2xl text-sm text-slate-400">
           The Coog Planner browser extension adds an overlay on top of UH
@@ -38,7 +45,7 @@ export default function BrowserExtensionPage() {
           <a
             href={CHROME_WEB_STORE_URL}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="inline-flex items-center rounded-full bg-red-400 px-4 py-1.5 text-sm font-semibold text-slate-950 shadow-sm hover:bg-red-300"
           >
             Install extension 🚀
@@ -46,7 +53,7 @@ export default function BrowserExtensionPage() {
           <a
             href={GITHUB_REPO_URL}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="inline-flex items-center rounded-full border border-slate-700 bg-slate-950 px-4 py-1.5 text-sm font-medium text-slate-100 hover:border-slate-500 hover:bg-slate-900"
           >
             View source on GitHub
@@ -150,7 +157,7 @@ export default function BrowserExtensionPage() {
             <a
               href={CHROME_WEB_STORE_URL}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="font-medium text-red-400 hover:text-red-300"
             >
               Coog Planner extension listing
@@ -163,7 +170,7 @@ export default function BrowserExtensionPage() {
             <a
               href={GITHUB_REPO_URL}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="font-medium text-red-400 hover:text-red-300"
             >
               the GitHub repo
@@ -193,7 +200,7 @@ export default function BrowserExtensionPage() {
           <a
             href={CHROME_WEB_STORE_URL}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="inline-flex items-center rounded-full bg-slate-100 px-4 py-1.5 text-xs font-semibold text-slate-950 shadow-sm hover:bg-slate-200"
           >
             View on Chrome Web Store

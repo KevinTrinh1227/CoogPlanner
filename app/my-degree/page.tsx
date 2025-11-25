@@ -2,6 +2,7 @@
 
 import type { Metadata } from "next";
 import { siteConfig } from "@/config/site";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import MyDegreeClient from "./MyDegreeClient";
 
 export const metadata: Metadata = {
@@ -14,11 +15,18 @@ export default function MyDegreePage() {
   const { name } = siteConfig;
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-16 px-4 py-10 lg:py-14">
+    <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-10 lg:py-14">
+      {/* Breadcrumb */}
+      <PageBreadcrumb
+        crumbs={[{ label: "My degree" }]}
+        showStarAndCart={false}
+        className="mb-3"
+      />
+
       {/* Hero / intro */}
       <section className="space-y-4">
         <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-50 sm:text-3xl">
-          My Degree Planner
+          📜 My Degree & Progress
         </h1>
 
         <p className="text-sm leading-relaxed text-slate-300">

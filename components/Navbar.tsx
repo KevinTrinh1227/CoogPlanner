@@ -67,12 +67,12 @@ export default function Navbar() {
   const academicsItems: DesktopItem[] = [
     {
       title: "Courses",
-      desc: "Search UH courses with historical trends and difficulty.",
+      desc: "Search UH courses with historical trends, course analysis, general info, and difficulty.",
       href: "/courses",
     },
     {
       title: "Instructors",
-      desc: "View instructor histories, sections, and grade patterns.",
+      desc: "View instructor histories, RateMyProffessor ratings, sections, and grade patterns.",
       href: "#instructors",
     },
     {
@@ -81,8 +81,8 @@ export default function Navbar() {
       href: "#programs",
     },
     {
-      title: "Academic calendar",
-      desc: "Key dates for terms, add/drop, and exams.",
+      title: "Academic Calendar",
+      desc: "View UH key dates for terms, add/drop, exams, and session info.",
       href: "#academics",
     },
   ];
@@ -94,13 +94,13 @@ export default function Navbar() {
 
   const extensionItems: DesktopItem[] = [
     {
-      title: "Download extension",
+      title: "Download Extension",
       desc: "Add the Coog Planner overlay to your browser.",
       href: browserExtensionUrl,
     },
     {
-      title: "How it works",
-      desc: "Learn how pages are parsed safely and efficiently.",
+      title: "How It Works",
+      desc: "Learn how this extension works and usage guide.",
       href: "/browser-extension",
     },
   ];
@@ -108,12 +108,12 @@ export default function Navbar() {
   const resourcesItems: DesktopItem[] = [
     {
       title: "About",
-      desc: "Background, mission, and who is building Coog Planner.",
+      desc: "Background, mission, inspiration, and who is building Coog Planner.",
       href: "/about",
     },
     {
       title: "FAQ",
-      desc: "Answers to common questions about data and accuracy.",
+      desc: "Answers to common questions about data, accuracy, privacy, and more.",
       href: "/faq",
     },
     {
@@ -394,27 +394,26 @@ export default function Navbar() {
           <div className="absolute inset-0 bg-black/40" onClick={closeAll} />
 
           {/* Panel slides down under the sticky navbar */}
-          <div className="absolute inset-x-0 top-[3.25rem] max-h-[calc(100vh-3.25rem)] overflow-y-auto border-t border-slate-800 bg-slate-950/95 transition-transform duration-150 ease-out">
+          <div className="absolute inset-x-0 top-[3.25rem] max-h-[calc(100vh-3.25rem)] overflow-y-auto bg-slate-950/95 transition-transform duration-150 ease-out">
             <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-4">
-              {/* Auth row - centered identical buttons */}
-              <div className="flex flex-col items-center gap-2">
-                <div className="flex gap-2">
+              {/* Auth row - side by side buttons */}
+              <div className="mt-3 flex items-center justify-center">
+                <div className="flex w-full max-w-xs gap-2">
                   <Link
                     href="#signin"
-                    className="rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-sm font-medium text-slate-100 shadow-sm hover:border-slate-500 hover:bg-slate-800 transition-colors"
+                    className="flex-1 flex items-center justify-center rounded-md border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm font-semibold text-slate-100 shadow-sm transition-colors hover:border-slate-500 hover:bg-slate-900"
                     onClick={closeAll}
                   >
                     Sign in
                   </Link>
                   <Link
                     href="#signup"
-                    className="rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-sm font-medium text-slate-100 shadow-sm hover:border-slate-500 hover:bg-slate-800 transition-colors"
+                    className="flex-1 flex items-center justify-center rounded-md bg-red-400 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition-colors hover:bg-red-300"
                     onClick={closeAll}
                   >
                     Sign up
                   </Link>
                 </div>
-                <div className="mt-3 h-px w-full max-w-xs bg-slate-800" />
               </div>
 
               {/* Coog Planner section */}
@@ -460,6 +459,9 @@ export default function Navbar() {
                 </div>
               </div>
             </div>
+
+            {/* Single subtle separator at very bottom of dropdown */}
+            <div className="h-px w-full bg-slate-900/80" />
           </div>
         </div>
       )}

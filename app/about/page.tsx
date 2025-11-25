@@ -2,6 +2,7 @@
 
 import type { Metadata } from "next";
 import { siteConfig } from "@/config/site";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import {
   getGithubOverview,
   type CommitSummary,
@@ -120,15 +121,19 @@ export default async function AboutPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-16 px-4 py-10 lg:py-14">
+    <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-10 lg:py-14">
+      {/* Breadcrumb */}
+      <PageBreadcrumb
+        crumbs={[{ label: "About" }]}
+        showStarAndCart={false}
+        className="mb-3"
+      />
+
       {/* About */}
       <section className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900/80 text-lg">
-            <span aria-hidden>📍</span>
-          </div>
+        <div>
           <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-50 sm:text-3xl">
-            About {name ?? "Coog Planner"}
+            📌 About {name ?? "Coog Planner"}
           </h1>
         </div>
 

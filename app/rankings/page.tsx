@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 
 type SortKey = "gpa" | "enrollment" | "difficulty" | "name";
 
@@ -177,14 +178,18 @@ export default function RankingsPage() {
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-10 lg:py-14">
+      {/* Breadcrumb */}
+      <PageBreadcrumb
+        crumbs={[{ label: "Rankings & leaderboards" }]}
+        showStarAndCart={false}
+        className="mb-3"
+      />
+
       {/* Page header */}
       <section>
         <div className="flex items-center gap-3">
-          <span className="text-2xl" aria-hidden>
-            🏆
-          </span>
           <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-50 md:text-3xl">
-            Rankings &amp; Leaderboards
+            🏆 Rankings &amp; Leaderboards
           </h1>
         </div>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300">

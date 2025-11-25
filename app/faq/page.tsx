@@ -1,7 +1,7 @@
 // app/faq/page.tsx
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { faqItems } from "@/config/faq";
@@ -43,10 +43,26 @@ function FaqPageInner() {
     []
   );
 
-  // Initial open state comes from URL
+  // Initial open state comes from URL (only on first render)
   const [activeSlug, setActiveSlug] = useState<string | undefined>(() => {
     return searchParams.get("q") || undefined;
   });
+
+  // Remember the initial slug from the URL so we only scroll on page load,
+  // not every time the query param changes while already on /faq.
+  const initialSlugRef = useRef<string | undefined>(undefined);
+  if (initialSlugRef.current === undefined) {
+    initialSlugRef.current = searchParams.get("q") || undefined;
+  }
+
+  useEffect(() => {
+    if (!initialSlugRef.current) return;
+
+    const el = document.getElementById(`faq-${initialSlugRef.current}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
 
   const openSlug = (slug: string) => {
     setActiveSlug(slug);
@@ -88,10 +104,10 @@ function FaqPageInner() {
       {/* Page header */}
       <section>
         <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-50 md:text-3xl">
-          Frequently Asked Questions
+          🤔 Frequently Asked Questions
         </h1>
 
-        <p className="mt-2 max-w-3xl text-xs leading-relaxed text-slate-300 md:text-sm">
+        <p className="mt-2 max-w-5xl text-xs leading-relaxed text-slate-300 md:text-sm">
           Answers to the most common questions about data freshness, accuracy,
           security, contributions, and more. Click a question below to expand
           its answer.
@@ -110,7 +126,7 @@ function FaqPageInner() {
             <section
               key={faq.slug}
               id={`faq-${faq.slug}`}
-              className="w-full rounded-2xl border border-slate-800 bg-slate-950/80 p-5 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/70 hover:shadow-md md:p-7"
+              className="scroll-mt-24 w-full rounded-2xl border border-slate-800 bg-slate-950/80 p-5 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/70 hover:shadow-md md:p-7"
             >
               {/* Header row is clickable */}
               <div

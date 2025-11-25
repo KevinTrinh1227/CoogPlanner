@@ -20,7 +20,7 @@ export default function RootLayout({
         <div className="flex min-h-screen flex-col">
           <Navbar />
           <SearchBarWrapper />
-          <main className="mx-auto flex-1 max-w-5xl px-4 py-8">{children}</main>
+          <main className="mx-auto flex-1 max-w-5xl px-4 py-0">{children}</main>
           <Footer />
         </div>
       </body>

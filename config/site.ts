@@ -41,7 +41,7 @@ export const siteConfig = {
   features: {
     title: "Built for Coogs, not generic students.",
     description:
-      "Coog Planner is opinionated around UH workflows: catalogs, prerequisites, and how students actually plan their semesters.",
+      "Coog Planner is opinionated around UH workflows: catalogs, prerequisites, and how students actually plan their semesters. Below shows some examples of what we do.",
     items: [
       {
         id: "uh-info",
@@ -60,7 +60,7 @@ export const siteConfig = {
       },
       {
         id: "smart-loads",
-        title: "Easier Semester Work Loads",
+        title: "Smarter Semester Work Loads",
         body: "Get a feel for when a semester is too heavy or too light with quick load indicators based on credits and course type mix.",
       },
       {

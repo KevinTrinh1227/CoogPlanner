@@ -1,3 +1,4 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -20,7 +21,10 @@ export default function RootLayout({
         <div className="flex min-h-screen flex-col">
           <Navbar />
           <SearchBarWrapper />
-          <main className="mx-auto flex-1 max-w-5xl px-4 py-0">{children}</main>
+
+          {/* MAIN: full width, no mx-auto / max-w / px here */}
+          <main className="flex-1">{children}</main>
+
           <Footer />
         </div>
       </body>

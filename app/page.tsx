@@ -4,11 +4,11 @@ import EnrollmentCountdown from "@/components/EnrollmentCountdown";
 
 export default function Home() {
   return (
-    <div className="space-y-14 md:space-y-16">
+    <div className="mx-auto max-w-5xl px-4 py-10 lg:py-14 space-y-14 md:space-y-16">
       {/* Hero */}
       <section
         id="get-started"
-        className="mt-4 md:mt-8 grid items-center gap-10 md:grid-cols-[1.3fr_minmax(0,1fr)]"
+        className="mt-4 md:mt-0 grid items-center gap-10 md:grid-cols-[1.3fr_minmax(0,1fr)]"
       >
         <div className="space-y-6">
           <EnrollmentCountdown />
@@ -40,7 +40,7 @@ export default function Home() {
               href="/my-degree"
               className="rounded-full border border-slate-700 bg-transparent px-4 py-2 text-xs font-medium text-slate-200 hover:border-slate-500 hover:bg-slate-900 md:px-5 md:text-sm"
             >
-              📄 Analyze My Degree & Progress
+              🚀 Get My Academic Analysis
             </Link>
           </div>
         </div>
@@ -57,7 +57,7 @@ export default function Home() {
               </p>
             </div>
             <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
-              Target Grad: Fall '28
+              Target Grad: Fall &apos;28
             </span>
           </div>
 
@@ -164,7 +164,6 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      {/* Features */}
       <section id="features" className="space-y-5">
         <div className="space-y-2">
           <h2 className="text-lg font-semibold tracking-tight text-slate-50">
@@ -210,7 +209,6 @@ export default function Home() {
           </li>
         </ul>
       </section>
-
       {/* Student journey from transcript to schedule */}
       <section id="student-story" className="space-y-5">
         <div className="space-y-2">

@@ -1,9 +1,21 @@
 // lib/github.ts
+/**
+ * GitHub API helpers for CoogPlanner.
+ *
+ * - Fetches repo metadata, commits, releases, issues, and PRs for the configured repo.
+ * - Uses only public GitHub endpoints by default (no token required).
+ * - Optionally reads GITHUB_TOKEN (server-side) for higher rate limits.
+ * - Designed for use in Next.js server components / route handlers with `next.revalidate`.
+ */
+
 import { siteConfig } from "@/config/site";
 
 const GITHUB_API_BASE = "https://api.github.com";
 const GITHUB_DEFAULT_REVALIDATE = 3600; // 1 hour for most metadata
 const GITHUB_FAST_REVALIDATE = 300; // 5 min for more dynamic lists (issues/PRs)
+
+// Prevent spamming the console with the same meta error over and over
+let hasLoggedRepoMetaError = false;
 
 export type RepoMeta = {
   latestCommitSha: string | null;
@@ -16,7 +28,7 @@ export type CommitSummary = {
   shortSha: string;
   message: string;
   authorName: string | null;
-  authorLogin: string | null; // 👈 added
+  authorLogin: string | null;
   authorAvatarUrl: string | null;
   htmlUrl: string;
   committedAt: string; // ISO string
@@ -63,11 +75,15 @@ export type PullRequestSummary = {
 
 /**
  * Build headers for GitHub API requests.
- * If GITHUB_TOKEN is set, we use it for higher rate limits.
+ * - Always sends Accept + User-Agent.
+ * - Uses GITHUB_TOKEN if present, but it's completely optional.
  */
 function getGithubHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
+    // GitHub recommends setting a User-Agent, especially from server/worker environments.
+    // Feel free to update the URL below to your actual repo URL.
+    "User-Agent": "coog-planner (https://github.com/your-username/your-repo)",
   };
 
   if (process.env.GITHUB_TOKEN) {
@@ -79,12 +95,13 @@ function getGithubHeaders(): Record<string, string> {
 
 /**
  * Lightweight wrapper around fetch for GitHub API.
+ * - Returns `null` on any error or non-2xx response.
+ * - Uses Next.js `next.revalidate` hint for ISR.
  */
 async function githubFetch<T>(
   path: string,
   options?: {
     revalidate?: number;
-    // For future extension (query params, etc.)
   }
 ): Promise<T | null> {
   const { owner, repo } = siteConfig.github;
@@ -100,11 +117,10 @@ async function githubFetch<T>(
     );
 
     if (!res.ok) {
-      console.error(`GitHub API error (${path}):`, res.status, res.statusText);
+      console.warn(`GitHub API error (${path}):`, res.status, res.statusText);
       return null;
     }
 
-    // We type-cast because we know what we expect from the endpoint.
     const json = (await res.json()) as T;
     return json;
   } catch (err) {
@@ -114,59 +130,42 @@ async function githubFetch<T>(
 }
 
 /**
- * Original helper, kept compatible: returns basic repo meta
- * (latest commit SHA/URL + latest tag name).
+ * Basic repo meta:
+ * - Latest commit SHA + URL
+ * - Latest tag name
  */
 export async function getRepoMeta(): Promise<RepoMeta | null> {
-  const { owner, repo } = siteConfig.github;
+  const [commits, tags] = await Promise.all([
+    githubFetch<any[]>(`/commits?per_page=1`, {
+      revalidate: GITHUB_DEFAULT_REVALIDATE,
+    }),
+    githubFetch<any[]>(`/tags?per_page=1`, {
+      revalidate: GITHUB_DEFAULT_REVALIDATE,
+    }),
+  ]);
 
-  try {
-    const [commitsRes, tagsRes] = await Promise.all([
-      fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/commits?per_page=1`, {
-        headers: getGithubHeaders(),
-        next: { revalidate: GITHUB_DEFAULT_REVALIDATE },
-      }),
-      fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/tags?per_page=1`, {
-        headers: getGithubHeaders(),
-        next: { revalidate: GITHUB_DEFAULT_REVALIDATE },
-      }),
-    ]);
-
-    if (!commitsRes.ok && !tagsRes.ok) {
+  if (!commits && !tags) {
+    if (!hasLoggedRepoMetaError) {
       console.error(
-        "GitHub repo meta: both commits and tags requests failed",
-        commitsRes.status,
-        tagsRes.status
+        "GitHub repo meta: both commits and tags requests failed (see earlier GitHub API warnings for details)"
       );
-      return null;
+      hasLoggedRepoMetaError = true;
     }
-
-    let latestCommitSha: string | null = null;
-    let latestCommitUrl: string | null = null;
-
-    if (commitsRes.ok) {
-      const commits = (await commitsRes.json()) as any[];
-      const latest = commits[0];
-      latestCommitSha = latest?.sha ?? null;
-      latestCommitUrl = latest?.html_url ?? null;
-    }
-
-    let latestTag: string | null = null;
-
-    if (tagsRes.ok) {
-      const tags = (await tagsRes.json()) as any[];
-      latestTag = tags[0]?.name ?? null;
-    }
-
-    return {
-      latestCommitSha,
-      latestCommitUrl,
-      latestTag,
-    };
-  } catch (err) {
-    console.error("Error fetching GitHub repo meta", err);
     return null;
   }
+
+  const latestCommit = commits?.[0];
+  const latestTagObj = tags?.[0];
+
+  const latestCommitSha: string | null = latestCommit?.sha ?? null;
+  const latestCommitUrl: string | null = latestCommit?.html_url ?? null;
+  const latestTag: string | null = latestTagObj?.name ?? null;
+
+  return {
+    latestCommitSha,
+    latestCommitUrl,
+    latestTag,
+  };
 }
 
 /**
@@ -186,7 +185,7 @@ export async function getRecentCommits(limit = 10): Promise<CommitSummary[]> {
     const message: string = c.commit?.message ?? "";
     const authorName: string | null =
       c.commit?.author?.name ?? c.author?.login ?? null;
-    const authorLogin: string | null = c.author?.login ?? null; // 👈 added
+    const authorLogin: string | null = c.author?.login ?? null;
     const authorAvatarUrl: string | null = c.author?.avatar_url ?? null;
     const htmlUrl: string = c.html_url;
     const committedAt: string =
@@ -197,7 +196,7 @@ export async function getRecentCommits(limit = 10): Promise<CommitSummary[]> {
       shortSha,
       message,
       authorName,
-      authorLogin, // 👈 added
+      authorLogin,
       authorAvatarUrl,
       htmlUrl,
       committedAt,
@@ -231,10 +230,6 @@ export async function getReleases(limit = 10): Promise<ReleaseSummary[]> {
 /**
  * Recent issues (NOT including pull requests).
  * You can control state ("open" | "closed" | "all").
- *
- * This is perfect for:
- *  - Showing "recently reported issues" on an internal dashboard
- *  - Surface a few "known issues" on the Updates page
  */
 export async function getRecentIssues(options?: {
   limit?: number;
@@ -274,7 +269,7 @@ export async function getRecentIssues(options?: {
 
 /**
  * Recent pull requests (PRs).
- * Again, you can control state ("open" | "closed" | "all").
+ * You can control state ("open" | "closed" | "all").
  */
 export async function getRecentPullRequests(options?: {
   limit?: number;
@@ -307,8 +302,7 @@ export async function getRecentPullRequests(options?: {
 }
 
 /**
- * Optional helper if you want to get "everything" for the Updates page
- * in a single call from your server component and then distribute props.
+ * Convenience helper for pages that need multiple GitHub bits at once.
  */
 export async function getGithubOverview() {
   const [meta, commits, releases, issues, pullRequests] = await Promise.all([

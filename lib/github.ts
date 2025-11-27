@@ -8,14 +8,19 @@
  * - Designed for use in Next.js server components / route handlers with `next.revalidate`.
  */
 
+import { cache } from "react";
 import { siteConfig } from "@/config/site";
 
 const GITHUB_API_BASE = "https://api.github.com";
-const GITHUB_DEFAULT_REVALIDATE = 3600; // 1 hour for most metadata
-const GITHUB_FAST_REVALIDATE = 300; // 5 min for more dynamic lists (issues/PRs)
+// Rarely-changing data (tags, releases, basic meta)
+const GITHUB_DEFAULT_REVALIDATE = 60 * 60 * 6; // 6 hours
+
+// Somewhat dynamic data (commits, issues, PRs)
+const GITHUB_FAST_REVALIDATE = 60 * 60; // 1 hour
 
 // Prevent spamming the console with the same meta error over and over
 let hasLoggedRepoMetaError = false;
+let hasLoggedRateLimitWarning = false;
 
 export type RepoMeta = {
   latestCommitSha: string | null;
@@ -82,7 +87,7 @@ function getGithubHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
     // GitHub recommends setting a User-Agent, especially from server/worker environments.
-    // Feel free to update the URL below to your actual repo URL.
+    // TODO: update URL to your actual repo.
     "User-Agent": "coog-planner (https://github.com/your-username/your-repo)",
   };
 
@@ -97,6 +102,7 @@ function getGithubHeaders(): Record<string, string> {
  * Lightweight wrapper around fetch for GitHub API.
  * - Returns `null` on any error or non-2xx response.
  * - Uses Next.js `next.revalidate` hint for ISR.
+ * - Logs rate-limit errors more clearly, but only once.
  */
 async function githubFetch<T>(
   path: string,
@@ -117,7 +123,27 @@ async function githubFetch<T>(
     );
 
     if (!res.ok) {
-      console.warn(`GitHub API error (${path}):`, res.status, res.statusText);
+      if (res.status === 403) {
+        const remaining = res.headers.get("X-RateLimit-Remaining");
+        const reset = res.headers.get("X-RateLimit-Reset");
+
+        if (!hasLoggedRateLimitWarning) {
+          hasLoggedRateLimitWarning = true;
+
+          let resetTime = "unknown";
+          if (reset && !Number.isNaN(Number(reset))) {
+            const resetDate = new Date(Number(reset) * 1000);
+            resetTime = resetDate.toISOString();
+          }
+
+          console.warn(
+            `GitHub API rate limit hit for ${path}. X-RateLimit-Remaining=${remaining}. ` +
+              `Requests may fail until approximately ${resetTime}.`
+          );
+        }
+      } else {
+        console.warn(`GitHub API error (${path}):`, res.status, res.statusText);
+      }
       return null;
     }
 
@@ -130,11 +156,30 @@ async function githubFetch<T>(
 }
 
 /**
- * Basic repo meta:
- * - Latest commit SHA + URL
- * - Latest tag name
+ * In-memory cache for RepoMeta so we don't hammer GitHub on every request.
+ * This lives for the lifetime of the Node / worker process.
  */
-export async function getRepoMeta(): Promise<RepoMeta | null> {
+let cachedRepoMeta: RepoMeta | null = null;
+let cachedRepoMetaFetchedAt: number | null = null;
+// Use the same window as our default revalidate (in seconds -> ms)
+const REPO_META_TTL_MS = GITHUB_DEFAULT_REVALIDATE * 1000;
+
+/**
+ * Actual GitHub calls for repo meta (no in-memory cache).
+ */
+async function fetchRepoMetaFresh(): Promise<RepoMeta | null> {
+  // Optional dev guard: if you're in dev and don't care about live meta,
+  // you can short-circuit here to avoid rate limit:
+  // if (process.env.NODE_ENV === "development" && !process.env.GITHUB_TOKEN) {
+  //   if (!hasLoggedRepoMetaError) {
+  //     console.warn(
+  //       "Skipping GitHub meta fetch in development because GITHUB_TOKEN is not set."
+  //     );
+  //     hasLoggedRepoMetaError = true;
+  //   }
+  //   return null;
+  // }
+
   const [commits, tags] = await Promise.all([
     githubFetch<any[]>(`/commits?per_page=1`, {
       revalidate: GITHUB_DEFAULT_REVALIDATE,
@@ -169,11 +214,58 @@ export async function getRepoMeta(): Promise<RepoMeta | null> {
 }
 
 /**
+ * Basic repo meta:
+ * - Latest commit SHA + URL
+ * - Latest tag name
+ *
+ * Now with:
+ * - In-memory TTL caching (so we don't hit GitHub every request)
+ * - If GitHub fails but we have a cached value, we keep returning the cached value.
+ */
+export async function getRepoMeta(): Promise<RepoMeta | null> {
+  const now = Date.now();
+
+  if (
+    cachedRepoMeta &&
+    cachedRepoMetaFetchedAt &&
+    now - cachedRepoMetaFetchedAt < REPO_META_TTL_MS
+  ) {
+    // Within TTL: just return what we already have.
+    return cachedRepoMeta;
+  }
+
+  const fresh = await fetchRepoMetaFresh();
+
+  if (fresh) {
+    cachedRepoMeta = fresh;
+    cachedRepoMetaFetchedAt = now;
+    return fresh;
+  }
+
+  // If the new fetch failed but we have an older cached value, keep using it.
+  if (cachedRepoMeta) {
+    return cachedRepoMeta;
+  }
+
+  // No cached value and fetch failed: caller should handle null.
+  return null;
+}
+
+/**
+ * React-memoized version of getRepoMeta for server components.
+ * - Within a single render tree, repeated calls to getRepoMetaCached()
+ *   will reuse the same promise/value.
+ */
+export const getRepoMetaCached = cache(getRepoMeta);
+
+/**
  * Recent commits, for changelog / "Latest activity" sections.
  * Default: last 10 commits.
  */
 export async function getRecentCommits(limit = 10): Promise<CommitSummary[]> {
-  const data = await githubFetch<any[]>(`/commits?per_page=${limit}`, {
+  const safeLimit = Math.max(1, Math.min(limit, 100)); // GitHub max per_page=100
+
+  const data = await githubFetch<any[]>(`/commits?per_page=${safeLimit}`, {
     revalidate: GITHUB_FAST_REVALIDATE,
   });
 
@@ -209,7 +301,9 @@ export async function getRecentCommits(limit = 10): Promise<CommitSummary[]> {
  * Default: last 10 releases.
  */
 export async function getReleases(limit = 10): Promise<ReleaseSummary[]> {
-  const data = await githubFetch<any[]>(`/releases?per_page=${limit}`, {
+  const safeLimit = Math.max(1, Math.min(limit, 100));
+
+  const data = await githubFetch<any[]>(`/releases?per_page=${safeLimit}`, {
     revalidate: GITHUB_DEFAULT_REVALIDATE,
   });
 
@@ -237,9 +331,10 @@ export async function getRecentIssues(options?: {
 }): Promise<IssueSummary[]> {
   const limit = options?.limit ?? 10;
   const state = options?.state ?? "open";
+  const safeLimit = Math.max(1, Math.min(limit, 100));
 
   const data = await githubFetch<any[]>(
-    `/issues?state=${state}&per_page=${limit}`,
+    `/issues?state=${state}&per_page=${safeLimit}`,
     { revalidate: GITHUB_FAST_REVALIDATE }
   );
 
@@ -277,9 +372,10 @@ export async function getRecentPullRequests(options?: {
 }): Promise<PullRequestSummary[]> {
   const limit = options?.limit ?? 10;
   const state = options?.state ?? "open";
+  const safeLimit = Math.max(1, Math.min(limit, 100));
 
   const data = await githubFetch<any[]>(
-    `/pulls?state=${state}&per_page=${limit}`,
+    `/pulls?state=${state}&per_page=${safeLimit}`,
     { revalidate: GITHUB_FAST_REVALIDATE }
   );
 

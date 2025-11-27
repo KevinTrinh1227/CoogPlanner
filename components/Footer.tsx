@@ -2,11 +2,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
-import { getRepoMeta } from "@/lib/github";
+import { getRepoMetaCached } from "@/lib/github";
 import Tooltip from "@/components/Tooltip";
 
 export default async function Footer() {
-  const repoMeta = await getRepoMeta();
+  // Uses React + in-memory cached meta
+  const repoMeta = await getRepoMetaCached();
 
   const shortSha = repoMeta?.latestCommitSha?.slice(0, 7).toLowerCase() ?? "-";
   const version = repoMeta?.latestTag ?? "v0.0.0-dev";

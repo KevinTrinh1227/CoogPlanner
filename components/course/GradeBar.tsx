@@ -9,6 +9,8 @@ const gradeColors: Record<string, string> = {
   D: "bg-orange-400",
   F: "bg-red-500",
   W: "bg-purple-500",
+  S: "bg-sky-400", // Satisfactory
+  NR: "bg-slate-400", // Not Reported
   Other: "bg-slate-500",
 };
 

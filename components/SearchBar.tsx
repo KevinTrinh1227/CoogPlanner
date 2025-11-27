@@ -2,113 +2,159 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { courseSearchIndex } from "@/lib/courseSearchIndex";
+
+// ---- types (from your courseSearchIndex schema) --------------------
+
+export type CourseSearchEntry = (typeof courseSearchIndex)[number];
+
+const MAX_RESULTS = 15;
+
+// ---- ranking helpers ----------------------------------------------
+
+function normalize(str: string): string {
+  return str.normalize("NFKC").toLowerCase();
+}
+
+function scoreCourse(entry: CourseSearchEntry, rawQuery: string): number {
+  const q = normalize(rawQuery.trim());
+  if (!q) return 0;
+
+  const code = normalize(entry.courseCode);
+  const codeCompact = code.replace(/\s+/g, "");
+  const title = normalize(entry.courseTitle);
+  const context = normalize(entry.courseContext ?? "");
+
+  const titleWords = title.split(/\s+/);
+
+  let score = 0;
+
+  // 1) Exact / near-exact code match (e.g., "cosc 3320" or "cosc3320")
+  if (code === q || codeCompact === q.replace(/\s+/g, "")) {
+    score += 220;
+  }
+
+  // 2) Title starts with query
+  if (title.startsWith(q)) {
+    score += 180;
+  }
+
+  // 3) Any word in title starts with query
+  if (titleWords.some((w) => w.startsWith(q))) {
+    score += 150;
+  }
+
+  // 4) Code starts with query
+  if (code.startsWith(q) || codeCompact.startsWith(q)) {
+    score += 130;
+  }
+
+  // 5) Code contains query
+  if (code.includes(q) || codeCompact.includes(q)) {
+    score += 100;
+  }
+
+  // 6) Title contains query
+  if (title.includes(q)) {
+    score += 90;
+  }
+
+  // 7) Context contains query (weaker)
+  if (context.includes(q)) {
+    score += 40;
+  }
+
+  // Small boost for more specific queries
+  score += Math.min(q.length, 10);
+
+  return score;
+}
+
+/**
+ * Returns *at most* MAX_RESULTS course matches.
+ * - If query is empty: default list (sorted by courseCode).
+ * - If query present: ranked list based on scoreCourse.
+ */
+function getCourseMatches(query: string): CourseSearchEntry[] {
+  const trimmed = query.trim();
+
+  // Empty query → default suggestions
+  if (!trimmed) {
+    return [...courseSearchIndex]
+      .sort((a: CourseSearchEntry, b: CourseSearchEntry) =>
+        a.courseCode.localeCompare(b.courseCode)
+      )
+      .slice(0, MAX_RESULTS);
+  }
+
+  const qNorm = normalize(trimmed);
+
+  const scored = courseSearchIndex
+    .map((entry: CourseSearchEntry) => ({
+      entry,
+      score: scoreCourse(entry, qNorm),
+    }))
+    .filter((item) => item.score > 0);
+
+  scored.sort(
+    (
+      a: { entry: CourseSearchEntry; score: number },
+      b: { entry: CourseSearchEntry; score: number }
+    ) => {
+      if (b.score !== a.score) return b.score - a.score;
+      const codeCmp = a.entry.courseCode.localeCompare(b.entry.courseCode);
+      if (codeCmp !== 0) return codeCmp;
+      return a.entry.courseTitle.localeCompare(b.entry.courseTitle);
+    }
+  );
+
+  return scored.slice(0, MAX_RESULTS).map((s) => s.entry);
+}
+
+// -------------------------------------------------------------------
 
 export default function SearchBar() {
   const router = useRouter();
   const pathname = usePathname();
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
-
   const [filters, setFilters] = useState({
     courses: true,
-    instructors: true,
-    programs: true,
+    instructors: true, // future
+    programs: true, // future
   });
 
   const [query, setQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
   const toggleFilter = (key: keyof typeof filters) => {
     setFilters((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Example data (placeholder)
-  const courseExamples = [
-    {
-      code: "COSC 3320",
-      title: "Algorithms and Data Structures",
-    },
-    {
-      code: "COSC 3380",
-      title: "Design File and Database Systems",
-    },
-  ];
-
-  const instructorExamples = [
-    {
-      name: "Shishir Shah",
-      subtitle: "Professor · Computer Science",
-    },
-    {
-      name: "Carlos Alberto Rincon Castro",
-      subtitle: "Associate Professor · Computer Science",
-    },
-  ];
-
-  const programExamples = [
-    {
-      name: "Computer Science B.S.",
-      subtitle: "College of Natural Sciences & Mathematics",
-    },
-    {
-      name: "Psychology B.A.",
-      subtitle: "College of Liberal Arts & Social Sciences",
-    },
-  ];
-
   // Keep the search query in sync with the current route.
-  // On course/instructor/program detail pages, show a label.
-  // On all other pages, clear the input.
   useEffect(() => {
     if (!pathname) {
       setQuery("");
       return;
     }
 
-    // Course detail: /courses/[code-slug]
+    // Course detail: /courses/[slug]
     if (pathname.startsWith("/courses/")) {
-      const slug = pathname.split("/")[2] ?? "";
-      const match = courseExamples.find(
-        (course) => course.code.replace(/\s+/g, "-") === slug
-      );
-
-      if (match) {
-        setQuery(`${match.code}: ${match.title}`);
-        return;
-      }
-    }
-
-    // Instructor detail: /instructors/[slug]
-    if (pathname.startsWith("/instructors/")) {
       const slug = decodeURIComponent(pathname.split("/")[2] ?? "");
-      const match = instructorExamples.find(
-        (inst) =>
-          inst.name.toLowerCase().replace(/\s+/g, "-") === slug.toLowerCase()
+      const match = courseSearchIndex.find(
+        (c: CourseSearchEntry) => normalize(c.slug) === normalize(slug)
       );
 
       if (match) {
-        setQuery(match.name);
+        setQuery(`${match.courseCode}: ${match.courseTitle}`);
         return;
       }
     }
 
-    // Program / degree detail: /programs/[slug]
-    if (pathname.startsWith("/programs/")) {
-      const slug = decodeURIComponent(pathname.split("/")[2] ?? "");
-      const match = programExamples.find(
-        (prog) =>
-          prog.name.toLowerCase().replace(/\s+/g, "-") === slug.toLowerCase()
-      );
+    // Future: /instructors/[slug], /programs/[slug] here
 
-      if (match) {
-        setQuery(match.name);
-        return;
-      }
-    }
-
-    // All other routes (or no match) -> clear search bar
+    // Other routes -> clear search bar
     setQuery("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
@@ -129,6 +175,10 @@ export default function SearchBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Derived matches (for now: only courses are wired)
+  const matchedCourses = filters.courses ? getCourseMatches(query) : [];
+  const hasAnyResults = matchedCourses.length > 0; // instructors/programs later
+
   return (
     <div className="mx-auto w-full max-w-5xl px-4 pt-3" ref={containerRef}>
       <div className="mx-auto w-full max-w-3xl">
@@ -141,7 +191,10 @@ export default function SearchBar() {
                 type="text"
                 placeholder="Search"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
                 onFocus={() => setShowSuggestions(true)}
                 className="h-full w-full bg-transparent pl-9 pr-2 text-[16px] md:text-sm text-slate-50 placeholder:text-slate-500 focus:outline-none"
               />
@@ -168,13 +221,13 @@ export default function SearchBar() {
             <button
               type="button"
               onClick={() => setFiltersOpen((prev) => !prev)}
-              className="mr-1 inline-flex items-center gap-1 rounded-xl px-3 py-1 text-[11px] font-medium text-slate-200 hover:bg-slate-900"
+              className="mr-1 inline-flex items-center gap-1.5 rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-1.5 text-[11px] font-medium text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-900"
             >
               <span className="inline-flex h-4 w-4 items-center justify-center">
                 <svg
                   viewBox="0 0 20 20"
                   aria-hidden="true"
-                  className="h-4 w-4 text-slate-300"
+                  className="h-4 w-4 text-slate-200"
                 >
                   <path
                     d="M4 5h12M4 10h12M4 15h12M8 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm6 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm-6 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"
@@ -192,145 +245,156 @@ export default function SearchBar() {
 
           {/* Filters dropdown */}
           <div
-            className={`absolute right-0 z-30 mt-2 w-52 rounded-xl border border-slate-800 bg-slate-950/95 p-3 text-xs text-slate-200 shadow-xl shadow-black/40 transition-all duration-150 ease-out ${
+            className={`absolute right-0 z-30 mt-2 w-60 rounded-2xl border border-slate-800 bg-slate-950/98 p-3.5 text-xs text-slate-200 shadow-xl shadow-black/40 transition-all duration-150 ease-out ${
               filtersOpen
                 ? "pointer-events-auto opacity-100 translate-y-0"
                 : "pointer-events-none opacity-0 -translate-y-1"
             }`}
           >
-            <p className="mb-2 text-[11px] font-semibold text-slate-400">
-              Show in results
-            </p>
+            <div className="mb-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                Search Filters
+              </p>
+            </div>
+
             <div className="space-y-2">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={filters.courses}
-                  onChange={() => toggleFilter("courses")}
-                  className="h-3 w-3 rounded border-slate-700 bg-slate-900 text-red-400 focus:ring-red-400"
-                />
-                <span>Courses</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={filters.instructors}
-                  onChange={() => toggleFilter("instructors")}
-                  className="h-3 w-3 rounded border-slate-700 bg-slate-900 text-red-400 focus:ring-red-400"
-                />
-                <span>Instructors</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={filters.programs}
-                  onChange={() => toggleFilter("programs")}
-                  className="h-3 w-3 rounded border-slate-700 bg-slate-900 text-red-400 focus:ring-red-400"
-                />
-                <span>Programs / Degrees</span>
-              </label>
+              {/* Courses */}
+              <button
+                type="button"
+                onClick={() => toggleFilter("courses")}
+                className={`flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-[11px] transition-colors ${
+                  filters.courses
+                    ? "bg-slate-900 text-slate-50 border border-emerald-500/70"
+                    : "bg-transparent text-slate-300 border border-slate-800 hover:border-slate-600"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex h-3 w-3 rounded-full ${
+                      filters.courses ? "bg-emerald-400" : "bg-slate-600"
+                    }`}
+                  />
+                  <span>Courses</span>
+                </span>
+                <span
+                  className={`text-[10px] ${
+                    filters.courses ? "text-emerald-300" : "text-slate-500"
+                  }`}
+                >
+                  {filters.courses ? "Showing" : "Not Showing"}
+                </span>
+              </button>
+
+              {/* Instructors */}
+              <button
+                type="button"
+                onClick={() => toggleFilter("instructors")}
+                className={`flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-[11px] transition-colors ${
+                  filters.instructors
+                    ? "bg-slate-900 text-slate-50 border border-emerald-500/40"
+                    : "bg-transparent text-slate-300 border border-slate-800 hover:border-slate-600"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex h-3 w-3 rounded-full ${
+                      filters.instructors ? "bg-emerald-400" : "bg-slate-600"
+                    }`}
+                  />
+                  <span>Instructors</span>
+                </span>
+                <span
+                  className={`text-[10px] ${
+                    filters.instructors ? "text-emerald-300" : "text-slate-500"
+                  }`}
+                >
+                  {filters.instructors ? "Showing" : "Not Showing"}
+                </span>
+              </button>
+
+              {/* Programs / Degrees */}
+              <button
+                type="button"
+                onClick={() => toggleFilter("programs")}
+                className={`flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-[11px] transition-colors ${
+                  filters.programs
+                    ? "bg-slate-900 text-slate-50 border border-emerald-500/40"
+                    : "bg-transparent text-slate-300 border border-slate-800 hover:border-slate-600"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex h-3 w-3 rounded-full ${
+                      filters.programs ? "bg-emerald-400" : "bg-slate-600"
+                    }`}
+                  />
+                  <span>Programs / Degrees</span>
+                </span>
+                <span
+                  className={`text-[10px] ${
+                    filters.programs ? "text-emerald-300" : "text-slate-500"
+                  }`}
+                >
+                  {filters.programs ? "Showing" : "Not Showing"}
+                </span>
+              </button>
             </div>
           </div>
 
           {/* Suggestions dropdown */}
           <div
-            className={`absolute left-0 right-0 z-20 mt-2 rounded-2xl border border-slate-800 bg-slate-950/98 p-4 text-xs text-slate-200 shadow-2xl shadow-black/50 transition-all duration-150 ease-out ${
-              showSuggestions
+            className={`absolute left-0 right-0 z-20 mt-2 rounded-2xl border border-slate-800 bg-slate-950/98 p-3 text-xs text-slate-200 shadow-2xl shadow-black/50 transition-all duration-150 ease-out ${
+              showSuggestions && (hasAnyResults || query.trim().length >= 0)
                 ? "pointer-events-auto opacity-100 translate-y-0"
                 : "pointer-events-none opacity-0 -translate-y-1"
             }`}
           >
-            {/* Courses */}
-            <div>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                Courses
-              </p>
-              <div className="space-y-2">
-                {courseExamples.map((course) => (
-                  <button
-                    key={course.code}
-                    type="button"
-                    className="w-full rounded-lg px-1 py-1.5 text-left hover:bg-slate-900"
-                    onClick={() => {
-                      setShowSuggestions(false);
+            <div className="max-h-80 space-y-4 overflow-y-auto custom-scrollbar">
+              {/* Courses section (only if there are matches) */}
+              {matchedCourses.length > 0 && (
+                <div>
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    Courses
+                  </p>
+                  <div className="space-y-1.5">
+                    {matchedCourses.map((course: CourseSearchEntry) => (
+                      <button
+                        key={course.slug}
+                        type="button"
+                        className="w-full rounded-lg px-1.5 py-1.5 text-left hover:bg-slate-900"
+                        onClick={() => {
+                          const label = `${course.courseCode}: ${course.courseTitle}`;
+                          setQuery(label);
+                          setShowSuggestions(false);
+                          router.push(`/courses/${course.slug}`);
+                        }}
+                      >
+                        <p className="text-sm font-semibold text-slate-50">
+                          {course.courseCode}
+                        </p>
+                        <p className="text-[11px] text-slate-300">
+                          {course.courseTitle}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-                      const label = `${course.code}: ${course.title}`;
-                      setQuery(label);
-
-                      if (course.code === "COSC 3320") {
-                        // Build slug: "COSC 3320" -> "COSC-3320" (keeps uppercase)
-                        const slug = course.code.replace(/\s+/g, "-");
-                        router.push(`/courses/${slug}`);
-                      }
-                    }}
-                  >
-                    <p className="text-sm font-semibold text-slate-50">
-                      {course.code}
-                    </p>
-                    <p className="text-[11px] text-slate-300">{course.title}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Divider */}
-            <div className="my-3 h-px w-full bg-slate-800" />
-
-            {/* Instructors */}
-            <div>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                Instructors
-              </p>
-              <div className="space-y-2">
-                {instructorExamples.map((inst) => (
-                  <button
-                    key={inst.name}
-                    type="button"
-                    className="w-full rounded-lg px-1 py-1.5 text-left hover:bg-slate-900"
-                    onClick={() => {
-                      setQuery(inst.name);
-                      setShowSuggestions(false);
-                    }}
-                  >
-                    <p className="text-sm font-semibold text-slate-50">
-                      {inst.name}
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      {inst.subtitle}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Divider */}
-            <div className="my-3 h-px w-full bg-slate-800" />
-
-            {/* Programs / Degrees */}
-            <div>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                Programs / Degrees
-              </p>
-              <div className="space-y-2">
-                {programExamples.map((prog) => (
-                  <button
-                    key={prog.name}
-                    type="button"
-                    className="w-full rounded-lg px-1 py-1.5 text-left hover:bg-slate-900"
-                    onClick={() => {
-                      setQuery(prog.name);
-                      setShowSuggestions(false);
-                    }}
-                  >
-                    <p className="text-sm font-semibold text-slate-50">
-                      {prog.name}
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      {prog.subtitle}
-                    </p>
-                  </button>
-                ))}
-              </div>
+              {/* Empty state when there's a query and no matches */}
+              {matchedCourses.length === 0 && query.trim().length > 0 && (
+                <p className="px-1 py-1.5 text-[11px] text-slate-400">
+                  No results yet. Try a course code (e.g.,{" "}
+                  <span className="font-semibold text-slate-200">
+                    COSC 3320
+                  </span>
+                  ) or a keyword like{" "}
+                  <span className="font-semibold text-slate-200">
+                    algorithms
+                  </span>
+                  .
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -341,7 +405,7 @@ export default function SearchBar() {
           <span className="font-semibold text-slate-200">course</span>,{" "}
           <span className="font-semibold text-slate-200">instructor</span> or{" "}
           <span className="font-semibold text-slate-200">degree plan</span> to
-          begin. (e.g., COSC 1336, Rincon Castro, Computer Science B.S.)
+          begin. (e.g., COSC 3380, Uma Ramamurthy, Computer Science B.S.)
         </p>
       </div>
     </div>

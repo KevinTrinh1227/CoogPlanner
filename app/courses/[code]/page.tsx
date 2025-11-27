@@ -1,6 +1,7 @@
 // app/courses/[code]/page.tsx
 import { notFound } from "next/navigation";
-import { getCourseByCode, type Course } from "@/lib/courses";
+import { getCourseDisplayCode, type Course } from "@/lib/courses";
+import { getCourseByCodeFromDb } from "@/lib/courseLoader";
 import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import CourseHero from "@/components/course/CourseHero";
 import CourseAnalysisCard from "@/components/course/CourseAnalysisCard";
@@ -18,6 +19,13 @@ type CoursePageProps = {
 // One instructor summary object
 type InstructorSummary = Course["instructors"][number];
 
+// Simple horizontal divider to match the Hero's bottom border vibe
+function SectionDivider() {
+  return (
+    <div className="my-4 border-b border-slate-800/80" aria-hidden="true" />
+  );
+}
+
 function formatGpa(value: number | null): string {
   if (value == null) return "-";
   return value.toFixed(2);
@@ -25,7 +33,7 @@ function formatGpa(value: number | null): string {
 
 function formatPercent(value: number | null): string {
   if (value == null) return "-";
-  return `${value.toFixed(0)}%`;
+  return `${value.toFixed(2)}%`;
 }
 
 function formatNumber(value: number | null): string {
@@ -33,17 +41,45 @@ function formatNumber(value: number | null): string {
   return value.toLocaleString();
 }
 
+/**
+ * Build a human-readable analysis sentence for the course.
+ * - Uses difficulty_label from DB when present (e.g. "Very Easy", "Hard").
+ * - Falls back to a phrase derived from difficulty_score.
+ * - Defaults to "moderate" if nothing is available.
+ */
 function buildAnalysisText(course: Course): string {
-  const code = course.code.replace("-", " ");
+  const code = getCourseDisplayCode(course);
   const avgGpa = course.badges.gpa ?? course.snapshot.avgGpa ?? null;
   const drop = course.badges.dropRate ?? course.snapshot.dropRate ?? null;
-  const difficulty = course.badges.difficultyLabel.toLowerCase();
-  const trend = course.badges.trend.toLowerCase();
+
+  const rawLabel = course.badges.difficultyLabel;
+  const score = course.badges.difficultyScore;
+
+  let difficultyPhrase: string;
+
+  // 1) Prefer label from DB/cache (“Very Easy”, “Hard”, etc.)
+  if (typeof rawLabel === "string" && rawLabel.trim().length > 0) {
+    difficultyPhrase = rawLabel.trim().toLowerCase();
+  } else if (typeof score === "number") {
+    // 2) Fallback to score-based phrase if label missing
+    if (score <= 2.1) difficultyPhrase = "very easy";
+    else if (score <= 2.7) difficultyPhrase = "easy";
+    else if (score <= 3.3) difficultyPhrase = "moderate";
+    else if (score <= 3.9) difficultyPhrase = "hard";
+    else difficultyPhrase = "very hard";
+  } else {
+    // 3) Last-resort default
+    difficultyPhrase = "moderate";
+  }
+
+  const trendRaw = course.badges.trend;
+  const trend = trendRaw ? trendRaw.toLowerCase() : "stable";
 
   const gpaPart =
     avgGpa != null
       ? `around a B-range average GPA of ${avgGpa.toFixed(2)}`
       : "a solid GPA profile";
+
   const dropPart =
     drop != null
       ? `About ${drop.toFixed(
@@ -51,7 +87,7 @@ function buildAnalysisText(course: Course): string {
         )}% of students withdraw, so most who start the class finish it.`
       : "Most students who start the class finish it.";
 
-  return `${code} – ${course.name} typically yields ${gpaPart}. Expect ${difficulty} difficulty with a ${trend} GPA trend over recent terms. ${dropPart} This course is usually taken after intro programming and is a key part of the algorithms / data structures core for CS majors.`;
+  return `${code} – ${course.name} typically yields ${gpaPart}. Expect ${difficultyPhrase} difficulty with a ${trend} GPA trend over recent terms. ${dropPart} This course is usually taken after intro programming and is a key part of the algorithms / data structures core for CS majors.`;
 }
 
 function getTermRange(pastSections: Course["pastSections"]) {
@@ -94,24 +130,15 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
     notFound();
   }
 
-  const { course } = await getCourseByCode(rawCode);
+  // 🔁 Now using DB-backed loader
+  const course = await getCourseByCodeFromDb(rawCode);
 
   if (!course) {
     notFound();
   }
 
-  const displayCode = course.code.replace("-", " ");
+  const displayCode = getCourseDisplayCode(course);
   const analysisText = buildAnalysisText(course);
-
-  const creditLine =
-    course.catalog.creditHours != null ||
-    course.catalog.lectureHours != null ||
-    course.catalog.labHours != null
-      ? `Credit Hours: ${course.catalog.creditHours ?? "-"} (Lecture Hours: ${
-          course.catalog.lectureHours ?? "-"
-        } · Lab Hours: ${course.catalog.labHours ?? "-"})`
-      : "";
-
   const snapshot = course.snapshot;
   const termRange = getTermRange(course.pastSections);
 
@@ -135,11 +162,17 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
         className="mb-3"
       />
 
+      {/* Course header / hero */}
       <CourseHero
         course={course}
-        displayCode={displayCode}
-        creditLine={creditLine}
+        // TODO: wire real counts from DB once syllabi/catalog sources exist
+        syllabusCount={3}
+        catalogCount={1}
+        hasCatalogLink={true}
       />
+
+      {/* separator after CourseHero */}
+      <SectionDivider />
 
       <CourseAnalysisCard analysisText={analysisText} />
 
@@ -148,6 +181,7 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
         formatGpa={formatGpa}
         formatPercent={formatPercent}
         formatNumber={formatNumber}
+        difficultyScore={course.badges.difficultyScore}
       />
 
       <CourseGradeDistributionCard
@@ -157,6 +191,11 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
         formatNumber={formatNumber}
       />
 
+      {/* separator after grade distribution */}
+      <SectionDivider />
+
+      <CourseInstructorAnalysisCard course={course} />
+
       <CourseInstructorsSection
         displayCode={displayCode}
         instructorPages={instructorPages}
@@ -164,7 +203,8 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
         totalSections={totalSections}
       />
 
-      <CourseInstructorAnalysisCard displayCode={displayCode} />
+      {/* separator after instructor analysis */}
+      <SectionDivider />
 
       <CoursePastSectionsCard
         displayCode={displayCode}

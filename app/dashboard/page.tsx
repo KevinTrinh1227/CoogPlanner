@@ -1,6 +1,6 @@
 // app/dashboard/page.tsx
 
-import React from "react";
+import React, { Suspense } from "react";
 import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import DegreeProgressCard from "@/components/dashboard/DegreeProgressCard";
 import SemesterCoursesCard from "@/components/dashboard/SemesterCoursesCard";
@@ -109,72 +109,80 @@ export default function DashboardPage() {
   const totalRequirements = 40;
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10 scroll-smooth lg:py-14">
-      {/* Breadcrumb: Home / Dashboard */}
-      <PageBreadcrumb
-        crumbs={[{ label: "Dashboard" }]}
-        className="mb-3"
-        showStarAndCart={false}
-        isSignedIn={true}
-      />
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-5xl px-4 py-10 text-sm text-slate-400">
+          Loading dashboard…
+        </div>
+      }
+    >
+      <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10 scroll-smooth lg:py-14">
+        {/* Breadcrumb: Home / Dashboard */}
+        <PageBreadcrumb
+          crumbs={[{ label: "Dashboard" }]}
+          className="mb-3"
+          showStarAndCart={false}
+          isSignedIn={true}
+        />
 
-      {/* Header */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        {/* Left side: heading + program line */}
-        <div>
-          <h1 className="text-3xl font-semibold text-slate-50 md:text-4xl">
-            Welcome, {studentName} 👋
-          </h1>
-          <p className="mt-1 text-sm text-slate-300">
-            {collegeAbbr} · {degreeName} · {classification} · GPA{" "}
-            {degreeProgress.currentGpa.toFixed(2)}
-          </p>
+        {/* Header */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          {/* Left side: heading + program line */}
+          <div>
+            <h1 className="text-3xl font-semibold text-slate-50 md:text-4xl">
+              Welcome, {studentName} 👋
+            </h1>
+            <p className="mt-1 text-sm text-slate-300">
+              {collegeAbbr} · {degreeName} · {classification} · GPA{" "}
+              {degreeProgress.currentGpa.toFixed(2)}
+            </p>
+          </div>
+
+          {/* Right side: estimated + target grad term text */}
+          <div className="mt-2 flex flex-col items-start gap-1.5 text-sm text-slate-300 md:items-end">
+            <span className="inline-flex items-center rounded-full border border-emerald-500/50 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
+              Estimated Grad Term: {onTrackTerm}
+            </span>
+            <span className="text-xs text-slate-500">
+              Target Grad Term: {onTrackTerm}
+            </span>
+          </div>
         </div>
 
-        {/* Right side: estimated + target grad term text */}
-        <div className="mt-2 flex flex-col items-start gap-1.5 text-sm text-slate-300 md:items-end">
-          <span className="inline-flex items-center rounded-full border border-emerald-500/50 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
-            Estimated Grad Term: {onTrackTerm}
-          </span>
-          <span className="text-xs text-slate-500">
-            Target Grad Term: {onTrackTerm}
-          </span>
-        </div>
+        {/* Academic Overview card */}
+        <ProfileOverviewCard
+          studentName={studentName}
+          degreeName={degreeName}
+          classification={classification}
+          classificationYearLabel={classificationYearLabel}
+          catalogYear={catalogYear}
+          onTrackTerm={onTrackTerm}
+          completedCredits={degreeProgress.completedCredits}
+          totalCredits={degreeProgress.totalCredits}
+          currentGpa={degreeProgress.currentGpa}
+          currentTerm={currentTerm}
+          currentCredits={currentCredits}
+          requirementsRemaining={requirementsRemaining}
+          totalRequirements={totalRequirements}
+        />
+
+        {/* Degree Progress */}
+        <DegreeProgressCard
+          degreeName={degreeName}
+          classification={classification}
+          completedCredits={degreeProgress.completedCredits}
+          totalCredits={degreeProgress.totalCredits}
+          currentGpa={degreeProgress.currentGpa}
+          buckets={degreeProgress.buckets}
+        />
+
+        {/* Current / Completed courses – combined component, full row */}
+        <SemesterCoursesCard
+          currentTerm={currentTerm}
+          currentCourses={currentCourses}
+          completedCourses={completedCourses}
+        />
       </div>
-
-      {/* Academic Overview card */}
-      <ProfileOverviewCard
-        studentName={studentName}
-        degreeName={degreeName}
-        classification={classification}
-        classificationYearLabel={classificationYearLabel}
-        catalogYear={catalogYear}
-        onTrackTerm={onTrackTerm}
-        completedCredits={degreeProgress.completedCredits}
-        totalCredits={degreeProgress.totalCredits}
-        currentGpa={degreeProgress.currentGpa}
-        currentTerm={currentTerm}
-        currentCredits={currentCredits}
-        requirementsRemaining={requirementsRemaining}
-        totalRequirements={totalRequirements}
-      />
-
-      {/* Degree Progress */}
-      <DegreeProgressCard
-        degreeName={degreeName}
-        classification={classification}
-        completedCredits={degreeProgress.completedCredits}
-        totalCredits={degreeProgress.totalCredits}
-        currentGpa={degreeProgress.currentGpa}
-        buckets={degreeProgress.buckets}
-      />
-
-      {/* Current / Completed courses – combined component, full row */}
-      <SemesterCoursesCard
-        currentTerm={currentTerm}
-        currentCourses={currentCourses}
-        completedCourses={completedCourses}
-      />
-    </div>
+    </Suspense>
   );
 }

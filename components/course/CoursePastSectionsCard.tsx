@@ -43,6 +43,40 @@ function sortSectionsByTermDesc(a: PastSection, b: PastSection) {
 }
 
 type PageSizeOption = number | "ALL";
+type SortKey =
+  | "term"
+  | "instructor"
+  | "section"
+  | "enrolled"
+  | "gpa"
+  | "A"
+  | "B"
+  | "C"
+  | "D"
+  | "F"
+  | "W"
+  | "S"
+  | "NR";
+
+/**
+ * Format instructor name as "Last, First".
+ * - "Jane Doe" -> "Doe, Jane"
+ * - "Unknown" / empty -> "Unknown"
+ * - If already has a comma, leave as-is.
+ */
+function formatInstructorDisplay(name: string | null | undefined): string {
+  const raw = (name || "").trim();
+  if (!raw) return "Unknown";
+  if (raw.toLowerCase() === "unknown") return "Unknown";
+  if (raw.includes(",")) return raw; // already "Last, First"
+
+  const parts = raw.split(/\s+/);
+  if (parts.length === 1) return raw;
+
+  const last = parts[parts.length - 1];
+  const first = parts.slice(0, -1).join(" ");
+  return `${last}, ${first}`;
+}
 
 export default function CoursePastSectionsCard({
   displayCode,
@@ -50,10 +84,66 @@ export default function CoursePastSectionsCard({
   totalSections,
   termRange,
 }: CoursePastSectionsCardProps) {
-  const sortedSections = useMemo(
-    () => [...pastSections].sort(sortSectionsByTermDesc),
-    [pastSections]
-  );
+  // --- Sorting state: one column at a time ---
+  const [sortKey, setSortKey] = useState<SortKey>("term");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
+  const sortedSections = useMemo(() => {
+    const base = [...pastSections];
+
+    base.sort((a, b) => {
+      switch (sortKey) {
+        case "term": {
+          // Reuse existing term-desc logic, invert for asc
+          return sortDirection === "desc"
+            ? sortSectionsByTermDesc(a, b)
+            : sortSectionsByTermDesc(b, a);
+        }
+        case "instructor": {
+          const ia = formatInstructorDisplay(a.instructor);
+          const ib = formatInstructorDisplay(b.instructor);
+          return sortDirection === "desc"
+            ? ib.localeCompare(ia)
+            : ia.localeCompare(ib);
+        }
+        case "section": {
+          const sa = (a.section ?? "").toString();
+          const sb = (b.section ?? "").toString();
+          return sortDirection === "desc"
+            ? sb.localeCompare(sa)
+            : sa.localeCompare(sb);
+        }
+        case "enrolled": {
+          const ea = a.enrolled ?? 0;
+          const eb = b.enrolled ?? 0;
+          return sortDirection === "desc" ? eb - ea : ea - eb;
+        }
+        case "gpa": {
+          const ga = a.gpa ?? 0;
+          const gb = b.gpa ?? 0;
+          if (ga === gb) return 0;
+          return sortDirection === "desc" ? gb - ga : ga - gb;
+        }
+        case "A":
+        case "B":
+        case "C":
+        case "D":
+        case "F":
+        case "W":
+        case "S":
+        case "NR": {
+          const la = (a.letters as any)?.[sortKey] ?? 0;
+          const lb = (b.letters as any)?.[sortKey] ?? 0;
+          return sortDirection === "desc" ? lb - la : la - lb;
+        }
+        default: {
+          return 0;
+        }
+      }
+    });
+
+    return base;
+  }, [pastSections, sortKey, sortDirection]);
 
   const totalRows = sortedSections.length;
 
@@ -95,6 +185,27 @@ export default function CoursePastSectionsCard({
     }
   };
 
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      // Toggle direction when clicking the same column
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      // Switch to new column, default to descending
+      setSortKey(key);
+      setSortDirection("desc");
+    }
+  };
+
+  // Helper to show an arrow next to the active sort column
+  const renderSortLabel = (label: string, key: SortKey) => (
+    <span className="inline-flex items-center gap-1">
+      {label}
+      {sortKey === key && (
+        <span aria-hidden>{sortDirection === "asc" ? "↑" : "↓"}</span>
+      )}
+    </span>
+  );
+
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -126,19 +237,84 @@ export default function CoursePastSectionsCard({
             <table className="min-w-full whitespace-nowrap text-xs text-slate-200 md:text-sm">
               <thead>
                 <tr className="border-b border-slate-800 bg-slate-900/70 text-xs uppercase tracking-wide text-slate-400 md:text-sm">
-                  <th className="px-2 py-2 text-left">Term</th>
-                  <th className="px-2 py-2 text-left">Instructor</th>
-                  <th className="px-2 py-2 text-left">Section</th>
-                  <th className="px-2 py-2 text-right">Enrolled</th>
-                  <th className="px-2 py-2 text-right">A</th>
-                  <th className="px-2 py-2 text-right">B</th>
-                  <th className="px-2 py-2 text-right">C</th>
-                  <th className="px-2 py-2 text-right">D</th>
-                  <th className="px-2 py-2 text-right">F</th>
-                  <th className="px-2 py-2 text-right">W</th>
-                  <th className="px-2 py-2 text-right">S</th>
-                  <th className="px-2 py-2 text-right">NR</th>
-                  <th className="px-2 py-2 text-right">GPA</th>
+                  <th
+                    className="px-2 py-2 text-left cursor-pointer select-none"
+                    onClick={() => handleSort("term")}
+                  >
+                    {renderSortLabel("Term", "term")}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left cursor-pointer select-none"
+                    onClick={() => handleSort("instructor")}
+                  >
+                    {renderSortLabel("Instructor", "instructor")}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left cursor-pointer select-none"
+                    onClick={() => handleSort("section")}
+                  >
+                    {renderSortLabel("Section", "section")}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left cursor-pointer select-none"
+                    onClick={() => handleSort("enrolled")}
+                  >
+                    {renderSortLabel("Enrolled", "enrolled")}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left cursor-pointer select-none"
+                    onClick={() => handleSort("A")}
+                  >
+                    {renderSortLabel("A", "A")}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left cursor-pointer select-none"
+                    onClick={() => handleSort("B")}
+                  >
+                    {renderSortLabel("B", "B")}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left cursor-pointer select-none"
+                    onClick={() => handleSort("C")}
+                  >
+                    {renderSortLabel("C", "C")}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left cursor-pointer select-none"
+                    onClick={() => handleSort("D")}
+                  >
+                    {renderSortLabel("D", "D")}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left cursor-pointer select-none"
+                    onClick={() => handleSort("F")}
+                  >
+                    {renderSortLabel("F", "F")}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left cursor-pointer select-none"
+                    onClick={() => handleSort("W")}
+                  >
+                    {renderSortLabel("W", "W")}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left cursor-pointer select-none"
+                    onClick={() => handleSort("S")}
+                  >
+                    {renderSortLabel("S", "S")}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left cursor-pointer select-none"
+                    onClick={() => handleSort("NR")}
+                  >
+                    {renderSortLabel("NR", "NR")}
+                  </th>
+                  <th
+                    className="px-2 py-2 text-left cursor-pointer select-none"
+                    onClick={() => handleSort("gpa")}
+                  >
+                    {renderSortLabel("GPA", "gpa")}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -155,39 +331,39 @@ export default function CoursePastSectionsCard({
                     >
                       <td className="px-2 py-2 text-left">{sec.term}</td>
                       <td className="px-2 py-2 text-left">
-                        {sec.instructor || "Unknown"}
+                        {formatInstructorDisplay(sec.instructor)}
                       </td>
                       <td className="px-2 py-2 text-left">
                         {sec.section || "-"}
                       </td>
-                      <td className="px-2 py-2 text-right">
+                      <td className="px-2 py-2 text-left">
                         {formatNumber(sec.enrolled)}
                       </td>
-                      <td className="px-2 py-2 text-right">
+                      <td className="px-2 py-2 text-left">
                         {safeLetters(letters?.A)}
                       </td>
-                      <td className="px-2 py-2 text-right">
+                      <td className="px-2 py-2 text-left">
                         {safeLetters(letters?.B)}
                       </td>
-                      <td className="px-2 py-2 text-right">
+                      <td className="px-2 py-2 text-left">
                         {safeLetters(letters?.C)}
                       </td>
-                      <td className="px-2 py-2 text-right">
+                      <td className="px-2 py-2 text-left">
                         {safeLetters(letters?.D)}
                       </td>
-                      <td className="px-2 py-2 text-right">
+                      <td className="px-2 py-2 text-left">
                         {safeLetters(letters?.F)}
                       </td>
-                      <td className="px-2 py-2 text-right">
+                      <td className="px-2 py-2 text-left">
                         {safeLetters(letters?.W)}
                       </td>
-                      <td className="px-2 py-2 text-right">
+                      <td className="px-2 py-2 text-left">
                         {safeLetters((letters as any)?.S)}
                       </td>
-                      <td className="px-2 py-2 text-right">
+                      <td className="px-2 py-2 text-left">
                         {safeLetters((letters as any)?.NR)}
                       </td>
-                      <td className="px-2 py-2 text-right">
+                      <td className="px-2 py-2 text-left">
                         {sec.gpa == null ? "-" : sec.gpa.toFixed(2)}
                       </td>
                     </tr>
@@ -220,7 +396,7 @@ export default function CoursePastSectionsCard({
                   <select
                     value={pageSize === "ALL" ? "ALL" : String(pageSize)}
                     onChange={handlePageSizeChange}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-100 shadow-sm outline-none ring-0 transition-colors hover:border-slate-500 focus:border-rose-400 md:text-sm sm:w-auto"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 md:py-2 text-xs font-medium text-slate-100 shadow-sm outline-none ring-0 transition-colors hover:border-slate-500 focus:border-rose-400 md:text-sm sm:w-auto"
                   >
                     {pageSizeOptions.map((opt) =>
                       opt === "ALL" ? (

@@ -71,6 +71,17 @@ export type GradeBucket = {
 export type InstructorSummary = {
   name: string;
   summary: string; // e.g. "224 students · Avg GPA 2.70 · Drop 19%"
+  department?: string | null;
+  rating?: number | null;
+
+  // Numeric fields for badges / stats
+  totalStudents?: number | null;
+  avgGpaNumeric?: number | null;
+  dropRateNumeric?: number | null;
+
+  // NEW: how many courses/sections this instructor has (for this context)
+  courseCount?: number | null;
+  sectionCount?: number | null;
 };
 
 export type SectionLetterBreakdown = {

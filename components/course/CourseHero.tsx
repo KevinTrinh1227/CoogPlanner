@@ -2,6 +2,8 @@
 import React from "react";
 import type { Course } from "@/lib/courses";
 import { getCourseDisplayCode } from "@/lib/courses";
+import CourseMetricBadgesRow from "@/components/course/CourseMetricBadgesRow";
+import CourseSyllabiButton from "@/components/course/CourseSyllabiButton";
 
 interface CourseHeroProps {
   course: Course;
@@ -17,6 +19,24 @@ interface CourseHeroProps {
   syllabusCount?: number; // number of syllabi found for this course
   catalogCount?: number; // number of catalog entries we have for this course
   hasCatalogLink?: boolean; // true if we have COID + CATOID
+}
+
+/**
+ * Normalize catalog text:
+ * - trim leading/trailing whitespace
+ * - remove spaces before punctuation (e.g. "ENGL 1301 ." → "ENGL 1301.")
+ * - collapse multiple spaces into a single space
+ */
+function normalizeCatalogText(text?: string | null): string {
+  if (!text) return "";
+  return (
+    text
+      .trim()
+      // Remove spaces before punctuation like . , ; : ! ?
+      .replace(/\s+([.,;:!?])/g, "$1")
+      // Collapse multiple spaces into a single space
+      .replace(/\s+/g, " ")
+  );
 }
 
 export default function CourseHero({
@@ -42,32 +62,14 @@ export default function CourseHero({
       lectureHours != null ? lectureHours : "N/A"
     } · Lab Hours: ${labHours != null ? labHours : "N/A"})`;
 
-  // Use difficulty label from DB/cache; only use score for fallback coloring.
-  const difficultyLabel = String(badges.difficultyLabel || "").trim();
-  let difficultyColor = "";
+  // Normalized catalog text fields (fix "ENGL 1301 ." etc.)
+  const prereqText = normalizeCatalogText(catalog.prerequisites);
+  const descriptionText = normalizeCatalogText(catalog.description);
 
-  if (difficultyLabel === "Very Easy" || difficultyLabel === "Easy") {
-    difficultyColor = "text-emerald-300";
-  } else if (difficultyLabel === "Moderate") {
-    difficultyColor = "text-amber-300";
-  } else if (difficultyLabel === "Hard" || difficultyLabel === "Very Hard") {
-    difficultyColor = "text-red-300";
-  } else if (badges.difficultyScore != null) {
-    // Fallback: infer color from numeric score if label is unexpected
-    difficultyColor =
-      badges.difficultyScore <= 2.5
-        ? "text-emerald-300"
-        : badges.difficultyScore <= 3.5
-        ? "text-amber-300"
-        : "text-red-300";
-  }
-
-  const gpaTrendColor =
-    badges.trend === "Improving"
-      ? "text-emerald-300"
-      : badges.trend === "Stable"
-      ? "text-sky-300"
-      : "text-red-300";
+  // Normalize fulfills entries too, in case any have trailing spaces
+  const fulfills = (catalog.fulfills ?? [])
+    .map((req) => normalizeCatalogText(req))
+    .filter((req) => req.length > 0);
 
   const pastSectionCount = course.pastSections?.length ?? 0;
   const showPastSectionsButton = pastSectionCount > 0;
@@ -93,92 +95,33 @@ export default function CourseHero({
         )}
 
         {/* GPA / Drop Rate / Difficulty / GPA Trend badges */}
-        <div className="mt-2 flex w-full flex-wrap justify-start gap-1.5 text-[10px] md:gap-2 md:text-[11px]">
-          {/* GPA */}
-          {badges.gpa != null && (
-            <div className="inline-flex items-center gap-1.5 rounded-md border border-slate-800 bg-slate-900 px-2 py-1 transition-colors transition-transform hover:border-slate-600 hover:bg-slate-900/90 hover:scale-[1.02]">
-              <span aria-hidden>📊</span>
-              <span className="font-semibold text-slate-200">GPA:</span>
-              <span
-                className={`font-semibold ${
-                  badges.gpa >= 3
-                    ? "text-emerald-300"
-                    : badges.gpa >= 2.75
-                    ? "text-amber-300"
-                    : "text-red-300"
-                }`}
-              >
-                {badges.gpa.toFixed(2)}
-              </span>
-            </div>
-          )}
-
-          {/* Drop Rate */}
-          {badges.dropRate != null && (
-            <div className="inline-flex items-center gap-1.5 rounded-md border border-slate-800 bg-slate-900 px-2 py-1 transition-colors transition-transform hover:border-slate-600 hover:bg-slate-900/90 hover:scale-[1.02]">
-              <span aria-hidden>📉</span>
-              <span className="font-semibold text-slate-200">Drop Rate:</span>
-              <span
-                className={`font-semibold ${
-                  badges.dropRate <= 10
-                    ? "text-emerald-300"
-                    : badges.dropRate <= 20
-                    ? "text-amber-300"
-                    : "text-red-300"
-                }`}
-              >
-                {badges.dropRate.toFixed(2)}%
-              </span>
-            </div>
-          )}
-
-          {/* Difficulty */}
-          {badges.difficultyScore != null && (
-            <div className="inline-flex items-center gap-1.5 rounded-md border border-slate-800 bg-slate-900 px-2 py-1 transition-colors transition-transform hover:border-slate-600 hover:bg-slate-900/90 hover:scale-[1.02]">
-              <span aria-hidden>🧠</span>
-              <span className="font-semibold text-slate-200">Difficulty:</span>
-              <span className={`font-semibold ${difficultyColor}`}>
-                {badges.difficultyScore.toFixed(2)} (
-                {difficultyLabel || "Unknown"})
-              </span>
-            </div>
-          )}
-
-          {/* GPA Trend */}
-          {badges.trend && (
-            <div className="inline-flex items-center gap-1.5 rounded-md border border-slate-800 bg-slate-900 px-2 py-1 transition-colors transition-transform hover:border-slate-600 hover:bg-slate-900/90 hover:scale-[1.02]">
-              <span aria-hidden>📈</span>
-              <span className="font-semibold text-slate-200">GPA Trend:</span>
-              <span className={`font-semibold ${gpaTrendColor}`}>
-                {badges.trend}
-              </span>
-            </div>
-          )}
-        </div>
+        <CourseMetricBadgesRow badges={badges} />
       </div>
 
       {/* Description & metadata */}
       <div className="mt-5 space-y-3">
         {/* Pre & Co-requisites */}
-        {catalog.prerequisites && (
+        {prereqText && (
           <div className="mt-1">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               Pre &amp; Co-requisites
             </p>
             <p className="mt-1 break-words text-sm leading-relaxed text-slate-200 md:text-[15px]">
-              {catalog.prerequisites}
+              {prereqText}
             </p>
           </div>
         )}
 
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            Description
-          </p>
-          <p className="mt-1 break-words text-sm leading-relaxed text-slate-200 md:text-[15px]">
-            {catalog.description}
-          </p>
-        </div>
+        {descriptionText && (
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              Description
+            </p>
+            <p className="mt-1 break-words text-sm leading-relaxed text-slate-200 md:text-[15px]">
+              {descriptionText}
+            </p>
+          </div>
+        )}
 
         <div className="break-words text-xs text-slate-300 md:text-sm">
           <span className="font-semibold text-slate-400">Repeatability:</span>{" "}
@@ -196,13 +139,13 @@ export default function CourseHero({
         </div>
 
         {/* Requirements & groups */}
-        {catalog.fulfills.length > 0 && (
+        {fulfills.length > 0 && (
           <div className="space-y-1">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               Requirements This Course Fulfills &amp; Groups
             </p>
             <div className="flex flex-wrap gap-2">
-              {catalog.fulfills.map((req) => (
+              {fulfills.map((req) => (
                 <button
                   key={req}
                   type="button"
@@ -234,13 +177,10 @@ export default function CourseHero({
 
             {/* Course Syllabi */}
             {showSyllabiButton && (
-              <button
-                type="button"
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900/80 px-3.5 py-1.5 text-xs font-medium text-slate-100 transition-colors hover:bg-slate-800 hover:text-slate-50 md:text-sm"
-              >
-                <span aria-hidden>📘</span>
-                <span>{syllabusCount} Syllabi Found</span>
-              </button>
+              <CourseSyllabiButton
+                displayCode={displayCode}
+                syllabusCount={syllabusCount}
+              />
             )}
 
             {/* Catalog Sources */}

@@ -85,12 +85,12 @@ If you notice something that looks wrong, please report it so it can be investig
 Your **unofficial transcript** lets CoogPlanner read which courses you have completed or are in progress so it can analyze your degree and suggest next steps.
 
 Here is a typical flow using UH systems:
-1️⃣ Go to AccessUH and sign in with your CougarNet credentials.  
-2️⃣ Open **myUH Self Service** from the dashboard.  
-3️⃣ In the menu, go to **Academic Records** → **Transcripts**.  
-4️⃣ Choose **View Unofficial Transcript** and make sure the report type is “Unofficial Transcript.”  
-5️⃣ Submit the request, then open the generated PDF (sometimes under “View All Requested Reports”).  
-6️⃣ Download that PDF to your device and upload it into CoogPlanner when prompted.
+1. Go to AccessUH and sign in with your CougarNet credentials.  
+2. Open **myUH Self Service** from the dashboard.  
+3. In the menu, go to **Academic Records** → **Transcripts**.  
+4. Choose **View Unofficial Transcript** and make sure the report type is “Unofficial Transcript.”  
+5. Submit the request, then open the generated PDF (sometimes under “View All Requested Reports”).  
+6. Download that PDF to your device and upload it into CoogPlanner when prompted.
 
 The PDF you upload is used to parse course history and build your analysis. Always review the parsed results and fix anything that looks off before relying on them for planning.`,
   },
@@ -137,7 +137,7 @@ Ways you might help:
 • Help test new features and report bugs or edge cases.  
 • Contribute code, documentation, or design ideas if and when the project is opened up on GitHub.  
 
-If you’re interested in helping, watch for links to the project repository or contact options on the About or Privacy & Legal pages.`,
+If you're interested in helping, watch for links to the project repository or contact options on the About or Privacy & Legal pages.`,
   },
   {
     question: "Is CoogPlanner affiliated with the University of Houston?",
@@ -170,5 +170,11 @@ With an account, you can (planned features):
 • Receive more tailored suggestions that persist across sessions.
 
 Signing up is optional, but it makes CoogPlanner more useful as a day-to-day planning companion rather than a one-off lookup tool.`,
+  },
+  {
+    question:
+      "How are difficulty scores calculated for courses and instructors?",
+    lastUpdated: "Oct 2025",
+    answer: `Basically, difficulty scores are derived from historical grade distributions to give a sense of how challenging a course or instructor has been for past students.`,
   },
 ];

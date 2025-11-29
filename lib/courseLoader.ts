@@ -170,16 +170,18 @@ function buildPastSections(rows: any[]): PastSection[] {
     const nr = safeNumber(row.not_reported_count);
     const w = safeNumber(row.total_dropped);
 
-    const graded = a + b + c + d + f + s + nr;
-    const total = graded + w;
+    // Total enrolled = all grade outcomes + withdrawals
+    const totalEnrolled = a + b + c + d + f + s + nr + w;
 
     const letters: SectionLetterBreakdown = {
-      A: a || null,
-      B: b || null,
-      C: c || null,
-      D: d || null,
-      F: f || null,
-      W: w || null,
+      A: a,
+      B: b,
+      C: c,
+      D: d,
+      F: f,
+      W: w,
+      S: s,
+      NR: nr,
     };
 
     const first = (row.instr_first_name || "").trim();
@@ -193,8 +195,8 @@ function buildPastSections(rows: any[]): PastSection[] {
       term: row.term ?? "Unknown term",
       instructor: instructorName,
       section: row.class_section ?? "",
-      enrolled: total || null,
-      gpa: row.avg_gpa != null ? Number(row.avg_gpa) : null,
+      enrolled: totalEnrolled, // always a number (0+)
+      gpa: row.avg_gpa != null ? Number(row.avg_gpa) : 0, // default to 0 instead of null
       letters,
     };
   });
@@ -205,6 +207,9 @@ function buildInstructorSummaries(rows: any[]): InstructorSummary[] {
     students: number;
     gpaWeightedSum: number;
     drops: number;
+    subject: string | null;
+    courses: Set<string>;
+    sections: number;
   };
 
   const byName = new Map<string, Agg>();
@@ -231,9 +236,21 @@ function buildInstructorSummaries(rows: any[]): InstructorSummary[] {
     const gpa = row.avg_gpa != null ? Number(row.avg_gpa) : null;
 
     if (!byName.has(name)) {
-      byName.set(name, { students: 0, gpaWeightedSum: 0, drops: 0 });
+      byName.set(name, {
+        students: 0,
+        gpaWeightedSum: 0,
+        drops: 0,
+        subject: row.subject ?? null,
+        courses: new Set<string>(),
+        sections: 0,
+      });
     }
     const agg = byName.get(name)!;
+
+    // Track how many distinct courses & sections this instructor has
+    const courseKey = `${row.subject ?? ""}-${row.catalog_nbr ?? ""}`;
+    agg.courses.add(courseKey);
+    agg.sections += 1;
 
     agg.students += total;
     agg.drops += w;
@@ -259,6 +276,14 @@ function buildInstructorSummaries(rows: any[]): InstructorSummary[] {
     summaries.push({
       name,
       summary: parts.join(" · "),
+      department: agg.subject ?? null,
+      rating: null, // placeholder for future RateMyProf / etc
+
+      totalStudents: agg.students || null,
+      avgGpaNumeric: avgGpa,
+      dropRateNumeric: dropRate,
+      courseCount: agg.courses.size || null,
+      sectionCount: agg.sections || null,
     });
   }
 

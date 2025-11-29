@@ -130,7 +130,7 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
     notFound();
   }
 
-  // 🔁 Now using DB-backed loader
+  // DB-backed loader
   const course = await getCourseByCodeFromDb(rawCode);
 
   if (!course) {
@@ -165,8 +165,7 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
       {/* Course header / hero */}
       <CourseHero
         course={course}
-        // TODO: wire real counts from DB once syllabi/catalog sources exist
-        syllabusCount={3}
+        // For now, just keep catalog info as you had it
         catalogCount={1}
         hasCatalogLink={true}
       />

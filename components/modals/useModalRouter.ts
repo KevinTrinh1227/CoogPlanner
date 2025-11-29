@@ -1,3 +1,4 @@
+// components/modals/useModalRouter.ts
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -34,7 +35,6 @@ export function useModalRouter() {
   const closeModal = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("modal");
-    // Optionally: remove specific extra params here if you reserve names like "modalId"
     const queryString = params.toString();
     router.push(`${pathname}${queryString ? `?${queryString}` : ""}`, {
       scroll: false,

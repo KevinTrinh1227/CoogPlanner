@@ -16,7 +16,6 @@ interface CourseHeroProps {
   creditLineOverride?: string;
 
   // Actions metadata
-  syllabusCount?: number; // number of syllabi found for this course
   catalogCount?: number; // number of catalog entries we have for this course
   hasCatalogLink?: boolean; // true if we have COID + CATOID
 }
@@ -42,7 +41,6 @@ function normalizeCatalogText(text?: string | null): string {
 export default function CourseHero({
   course,
   creditLineOverride,
-  syllabusCount = 0,
   catalogCount = 0,
   hasCatalogLink = false,
 }: CourseHeroProps) {
@@ -62,18 +60,16 @@ export default function CourseHero({
       lectureHours != null ? lectureHours : "N/A"
     } · Lab Hours: ${labHours != null ? labHours : "N/A"})`;
 
-  // Normalized catalog text fields (fix "ENGL 1301 ." etc.)
+  // Normalized catalog text fields
   const prereqText = normalizeCatalogText(catalog.prerequisites);
   const descriptionText = normalizeCatalogText(catalog.description);
 
-  // Normalize fulfills entries too, in case any have trailing spaces
   const fulfills = (catalog.fulfills ?? [])
     .map((req) => normalizeCatalogText(req))
     .filter((req) => req.length > 0);
 
   const pastSectionCount = course.pastSections?.length ?? 0;
   const showPastSectionsButton = pastSectionCount > 0;
-  const showSyllabiButton = syllabusCount > 0;
   const showCatalogButton = hasCatalogLink && catalogCount > 0;
 
   return (
@@ -175,13 +171,11 @@ export default function CourseHero({
               </button>
             )}
 
-            {/* Course Syllabi */}
-            {showSyllabiButton && (
-              <CourseSyllabiButton
-                displayCode={displayCode}
-                syllabusCount={syllabusCount}
-              />
-            )}
+            {/* Course Syllabi – opens modal, fetch happens in the modal */}
+            <CourseSyllabiButton
+              displayCode={displayCode}
+              courseTitle={course.name}
+            />
 
             {/* Catalog Sources */}
             {showCatalogButton && (

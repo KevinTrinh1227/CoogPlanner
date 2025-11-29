@@ -19,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-slate-950 text-slate-50 overflow-x-hidden">
+      <body className="bg-slate-950 text-slate-50 overflow-x-hidden overflow-y-scroll">
         <div className="flex min-h-screen flex-col">
           <Navbar />
           <SearchBarWrapper />

@@ -5,6 +5,10 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ModalShell from "./ModalShell";
 import type { BaseModalProps } from "./modalTypes";
+import {
+  getSyllabiForCourse,
+  setSyllabiForCourse,
+} from "@/components/course/syllabusClientCache";
 
 // Match the server's response shape (subset of CachedSyllabus)
 interface UiSyllabus {
@@ -111,8 +115,6 @@ export default function CourseSyllabiListModal({ onClose }: BaseModalProps) {
   const searchParams = useSearchParams();
   const code = searchParams.get("code") ?? "this course";
 
-  // Title is expected to come from query param when you open the modal:
-  // e.g. openModal("course-syllabi-list", { code: displayCode, title: course.name })
   const titleParam = searchParams.get("title");
   const courseTitle =
     titleParam && titleParam.trim().length > 0 ? titleParam.trim() : null;
@@ -121,13 +123,20 @@ export default function CourseSyllabiListModal({ onClose }: BaseModalProps) {
     code
   )}`;
 
-  const [syllabi, setSyllabi] = useState<UiSyllabus[] | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // 🔍 try client cache first
+  const cached = getSyllabiForCourse(code) as UiSyllabus[] | null;
+
+  const [syllabi, setSyllabi] = useState<UiSyllabus[] | null>(cached);
+  const [isLoading, setIsLoading] = useState<boolean>(!cached);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch from our own API (which is server-side cached for 14 days)
   useEffect(() => {
     let cancelled = false;
+
+    // If we already have it from the button, skip fetch → instant modal
+    if (cached && !cancelled) {
+      return;
+    }
 
     async function load() {
       setIsLoading(true);
@@ -143,10 +152,14 @@ export default function CourseSyllabiListModal({ onClose }: BaseModalProps) {
         }
 
         const data = await res.json();
-        if (!cancelled) {
-          setSyllabi((data.syllabi ?? []) as UiSyllabus[]);
-          setIsLoading(false);
-        }
+        if (cancelled) return;
+
+        const list = (data.syllabi ?? []) as UiSyllabus[];
+        setSyllabi(list);
+        setIsLoading(false);
+
+        // also put it into client cache for future openings
+        setSyllabiForCourse(code, list);
       } catch (err) {
         console.error("Error loading syllabi", err);
         if (!cancelled) {
@@ -161,7 +174,7 @@ export default function CourseSyllabiListModal({ onClose }: BaseModalProps) {
     return () => {
       cancelled = true;
     };
-  }, [code]);
+  }, [code, cached]);
 
   const list = syllabi ?? [];
 

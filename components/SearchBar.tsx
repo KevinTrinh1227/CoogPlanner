@@ -8,7 +8,14 @@ import { courseSearchIndex } from "@/lib/courseSearchIndex";
 
 export type CourseSearchEntry = (typeof courseSearchIndex)[number];
 
-const MAX_RESULTS = 15;
+type RecentCourse = Pick<
+  CourseSearchEntry,
+  "slug" | "courseCode" | "courseTitle"
+>;
+
+const MAX_RESULTS = 30; // doubled from 15
+const MAX_RECENT = 8;
+const RECENT_STORAGE_KEY = "coogplanner_recent_course_searches";
 
 // ---- ranking helpers ----------------------------------------------
 
@@ -127,36 +134,61 @@ export default function SearchBar() {
 
   const [query, setQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [recentCourses, setRecentCourses] = useState<RecentCourse[]>([]);
 
   const toggleFilter = (key: keyof typeof filters) => {
     setFilters((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Keep the search query in sync with the current route.
+  // Load recent searches from localStorage (client-side only)
   useEffect(() => {
-    if (!pathname) {
-      setQuery("");
-      return;
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(RECENT_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return;
+
+      const sanitized: RecentCourse[] = parsed
+        .filter(
+          (item: any) =>
+            item &&
+            typeof item.slug === "string" &&
+            typeof item.courseCode === "string" &&
+            typeof item.courseTitle === "string"
+        )
+        .slice(0, MAX_RECENT);
+
+      setRecentCourses(sanitized);
+    } catch {
+      // ignore bad JSON
     }
+  }, []);
 
-    // Course detail: /courses/[slug]
-    if (pathname.startsWith("/courses/")) {
-      const slug = decodeURIComponent(pathname.split("/")[2] ?? "");
-      const match = courseSearchIndex.find(
-        (c: CourseSearchEntry) => normalize(c.slug) === normalize(slug)
-      );
+  const saveRecentCourse = (course: CourseSearchEntry) => {
+    const entry: RecentCourse = {
+      slug: course.slug,
+      courseCode: course.courseCode,
+      courseTitle: course.courseTitle,
+    };
 
-      if (match) {
-        setQuery(`${match.courseCode}: ${match.courseTitle}`);
-        return;
+    setRecentCourses((prev) => {
+      const withoutDup = prev.filter((c) => c.slug !== entry.slug);
+      const next = [entry, ...withoutDup].slice(0, MAX_RECENT);
+      if (typeof window !== "undefined") {
+        try {
+          window.localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(next));
+        } catch {
+          // ignore storage errors
+        }
       }
-    }
+      return next;
+    });
+  };
 
-    // Future: /instructors/[slug], /programs/[slug] here
-
-    // Other routes -> clear search bar
+  // On any route change, clear the search bar so it doesn't persist across pages.
+  useEffect(() => {
     setQuery("");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   // Close filters & suggestions when clicking outside
@@ -178,6 +210,18 @@ export default function SearchBar() {
   // Derived matches (for now: only courses are wired)
   const matchedCourses = filters.courses ? getCourseMatches(query) : [];
   const hasAnyResults = matchedCourses.length > 0; // instructors/programs later
+  const isQueryEmpty = query.trim().length === 0;
+
+  const handleNavigateToCourse = (course: CourseSearchEntry | RecentCourse) => {
+    setShowSuggestions(false);
+    setQuery(""); // clear after "search"
+    // If this came from full CourseSearchEntry, save as recent
+    if ("courseTitle" in course && "courseCode" in course && "slug" in course) {
+      // course can be RecentCourse or CourseSearchEntry, both match this check
+      saveRecentCourse(course as CourseSearchEntry);
+    }
+    router.push(`/courses/${course.slug}`);
+  };
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 pt-3" ref={containerRef}>
@@ -196,6 +240,16 @@ export default function SearchBar() {
                   setShowSuggestions(true);
                 }}
                 onFocus={() => setShowSuggestions(true)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    // On Enter, navigate to the top match (if any)
+                    if (matchedCourses.length > 0) {
+                      const top = matchedCourses[0];
+                      handleNavigateToCourse(top);
+                    }
+                  }
+                }}
                 className="h-full w-full bg-transparent pl-9 pr-2 text-[16px] md:text-sm text-slate-50 placeholder:text-slate-500 focus:outline-none"
               />
 
@@ -350,6 +404,32 @@ export default function SearchBar() {
             }`}
           >
             <div className="max-h-80 space-y-4 overflow-y-auto custom-scrollbar">
+              {/* Recent searches section (only when query empty) */}
+              {isQueryEmpty && recentCourses.length > 0 && (
+                <div>
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    Recent searches
+                  </p>
+                  <div className="space-y-1.5">
+                    {recentCourses.map((course) => (
+                      <button
+                        key={`recent-${course.slug}`}
+                        type="button"
+                        className="w-full rounded-lg px-1.5 py-1.5 text-left hover:bg-slate-900"
+                        onClick={() => handleNavigateToCourse(course)}
+                      >
+                        <p className="text-sm font-semibold text-slate-50">
+                          {course.courseCode}
+                        </p>
+                        <p className="text-[11px] text-slate-300">
+                          {course.courseTitle}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Courses section (only if there are matches) */}
               {matchedCourses.length > 0 && (
                 <div>
@@ -362,12 +442,7 @@ export default function SearchBar() {
                         key={course.slug}
                         type="button"
                         className="w-full rounded-lg px-1.5 py-1.5 text-left hover:bg-slate-900"
-                        onClick={() => {
-                          const label = `${course.courseCode}: ${course.courseTitle}`;
-                          setQuery(label);
-                          setShowSuggestions(false);
-                          router.push(`/courses/${course.slug}`);
-                        }}
+                        onClick={() => handleNavigateToCourse(course)}
                       >
                         <p className="text-sm font-semibold text-slate-50">
                           {course.courseCode}

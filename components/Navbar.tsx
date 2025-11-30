@@ -358,13 +358,13 @@ export default function Navbar() {
           {/* Auth buttons (desktop) */}
           <div className="hidden items-center gap-3 md:flex">
             <Link
-              href="/dashboard"
+              href="/login"
               className="text-sm font-medium text-slate-300 hover:text-slate-50"
             >
               Sign in
             </Link>
             <Link
-              href="#signup"
+              href="/signup"
               className="rounded-lg bg-red-400 px-4 py-1.5 text-sm font-semibold text-slate-950 shadow-sm hover:bg-red-300"
             >
               Sign up
@@ -400,14 +400,14 @@ export default function Navbar() {
               <div className="mt-3 flex items-center justify-center">
                 <div className="flex w-full max-w-xs gap-2">
                   <Link
-                    href="/dashboard"
+                    href="/login"
                     className="flex-1 flex items-center justify-center rounded-md border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm font-semibold text-slate-100 shadow-sm transition-colors hover:border-slate-500 hover:bg-slate-900"
                     onClick={closeAll}
                   >
                     Sign in
                   </Link>
                   <Link
-                    href="#signup"
+                    href="/signup"
                     className="flex-1 flex items-center justify-center rounded-md bg-red-400 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition-colors hover:bg-red-300"
                     onClick={closeAll}
                   >

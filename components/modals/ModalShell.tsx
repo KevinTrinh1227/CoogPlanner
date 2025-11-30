@@ -13,6 +13,14 @@ interface ModalShellProps {
    * - "two-column": responsive 2-column layout on md+ (1 column on mobile)
    */
   layout?: "single" | "two-column";
+
+  /**
+   * Optional sticky header title & subtitle.
+   * If omitted, header will still render (for the close button),
+   * but without title/subtitle text.
+   */
+  title?: React.ReactNode;
+  subtitle?: React.ReactNode;
 }
 
 export default function ModalShell({
@@ -20,6 +28,8 @@ export default function ModalShell({
   children,
   ariaLabel = "Dialog",
   layout = "single",
+  title,
+  subtitle,
 }: ModalShellProps) {
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const previousActiveElementRef = useRef<Element | null>(null);
@@ -51,7 +61,7 @@ export default function ModalShell({
     scrollLockedRef.current = false;
   };
 
-  // Mount: dim/blur + show modal, but *don't* lock scroll yet
+  // Mount: dim/blur + show modal
   useEffect(() => {
     previousActiveElementRef.current = document.activeElement;
 
@@ -168,21 +178,46 @@ export default function ModalShell({
             : "opacity-0 -translate-y-1 scale-95"
         }`}
       >
-        {/* Close button */}
-        <button
-          type="button"
-          onClick={beginClose}
-          className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-xs font-semibold text-slate-200 shadow hover:border-slate-500 hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
-          aria-label="Close dialog"
-        >
-          ✕
-        </button>
+        {/* Shell: sticky header + scrollable body */}
+        <div className="flex max-h-[90vh] flex-col">
+          {/* Sticky header */}
+          <div className="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/98 px-4 pt-4 pb-3 sm:px-5 sm:pt-5 sm:pb-3">
+            {/* Row 1: title + close button on same line */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                {title && (
+                  <h2 className="text-sm font-semibold tracking-tight text-slate-50 sm:text-base">
+                    {title}
+                  </h2>
+                )}
+              </div>
 
-        {/* Scrollable content inside the modal */}
-        <div
-          className={`max-h-[90vh] overflow-y-auto custom-scrollbar px-4 pb-4 pt-5 sm:px-5 sm:pb-5 sm:pt-6 ${contentLayoutClasses}`}
-        >
-          {children}
+              {/* Close button (no hard circle, subtle hover “pill”) */}
+              <button
+                type="button"
+                onClick={beginClose}
+                className="inline-flex items-center justify-center rounded-full p-1.5 text-sm font-semibold text-slate-300 transition-transform transition-colors hover:bg-slate-800/80 hover:text-slate-50 hover:-translate-y-[1px] focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                aria-label="Close dialog"
+              >
+                {/* slightly larger / thicker X */}
+                <span className="text-base leading-none">✕</span>
+              </button>
+            </div>
+
+            {/* Row 2: subtitle / description under the title row */}
+            {subtitle && (
+              <p className="mt-1 text-xs text-slate-300 sm:text-sm">
+                {subtitle}
+              </p>
+            )}
+          </div>
+
+          {/* Scrollable content inside the modal */}
+          <div
+            className={`flex-1 overflow-y-auto custom-scrollbar px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4 ${contentLayoutClasses}`}
+          >
+            {children}
+          </div>
         </div>
       </div>
     </div>

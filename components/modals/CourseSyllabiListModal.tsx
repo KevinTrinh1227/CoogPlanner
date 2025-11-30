@@ -129,6 +129,7 @@ export default function CourseSyllabiListModal({ onClose }: BaseModalProps) {
   const [syllabi, setSyllabi] = useState<UiSyllabus[] | null>(cached);
   const [isLoading, setIsLoading] = useState<boolean>(!cached);
   const [error, setError] = useState<string | null>(null);
+  const [showInfo, setShowInfo] = useState<boolean>(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -199,45 +200,56 @@ export default function CourseSyllabiListModal({ onClose }: BaseModalProps) {
   });
 
   return (
-    <ModalShell onClose={onClose} ariaLabel="Course syllabi">
-      {/* Header */}
-      <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
-        Syllabi Found For {code}
-      </h2>
-
-      <p className="mt-2 text-xs sm:text-sm text-slate-300">
-        These syllabi are provided by{" "}
-        <a
-          href="https://uh.simplesyllabus.com/en-US/syllabus-library"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-semibold text-rose-300 underline-offset-2 hover:underline"
+    <ModalShell
+      onClose={onClose}
+      ariaLabel="Course syllabi"
+      title={`Syllabi Found For ${code}`}
+      subtitle={
+        <>
+          Live syllabi data from{" "}
+          <a
+            href="https://uh.simplesyllabus.com/en-US/syllabus-library"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-rose-300 underline-offset-2 hover:underline"
+          >
+            Simple Syllabus
+          </a>
+          , the official University of Houston course syllabus provider.
+        </>
+      }
+    >
+      {/* Collapsible data notice right under the sticky header */}
+      <div className="mt-1 mb-3 rounded-md border border-slate-800 bg-slate-950/60">
+        <button
+          type="button"
+          onClick={() => setShowInfo((prev) => !prev)}
+          className="flex w-full items-center justify-between px-3 py-2 text-[11px] sm:text-xs text-slate-200"
         >
-          Simple Syllabus
-        </a>
-        , the official University of Houston course syllabus provider.
-      </p>
-
-      <p className="mt-1 text-[11px] sm:text-xs text-slate-400">
-        CoogPlanner caches these results for up to 14 days. Use the button below
-        to view the very latest options directly.
-      </p>
-
-      {/* Button to view up-to-date syllabi */}
-      <div className="mt-3">
-        <a
-          href={simpleSyllabusCourseUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-rose-500/90 px-3.5 py-1.5 text-xs font-semibold text-slate-50 shadow-sm transition-transform transition-shadow hover:-translate-y-[1px] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
-        >
-          <span aria-hidden>🔗</span>
-          <span>View latest syllabi for {code}</span>
-        </a>
+          <span className="font-medium">Data &amp; Source Notice</span>
+          <span className="ml-2 text-[10px] text-slate-400">
+            {showInfo ? "Hide details" : "Show details"}
+          </span>
+        </button>
+        {showInfo && (
+          <div className="border-t border-slate-800 px-3 pb-3 pt-2 text-[10px] sm:text-[11px] text-slate-400 space-y-1">
+            <p>
+              All syllabi and section data displayed below come directly from
+              Simple Syllabus, a third-party service, and are not stored by
+              CoogPlanner. The data is live and documents or metadata may be
+              updated or removed at any time by the provider.
+            </p>
+            <p>
+              All syllabus content, logos, and related trademarks remain the
+              property of Simple Higher Ed, the University of Houston, and the
+              respective instructors.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Status area */}
-      <div className="mt-4 text-[11px] sm:text-xs text-slate-400">
+      <div className="mt-1 text-[11px] sm:text-xs text-slate-400">
         {isLoading && <p>Scanning Simple Syllabus for sections of {code}…</p>}
         {!isLoading && error && <p className="text-rose-300">{error}</p>}
         {!isLoading && !error && list.length === 0 && (
@@ -324,10 +336,10 @@ export default function CourseSyllabiListModal({ onClose }: BaseModalProps) {
                         rel="noopener noreferrer"
                         className="block rounded-xl border border-slate-800 bg-slate-900/80 p-3 sm:p-3.5 transition-transform transition-shadow hover:-translate-y-[1px] hover:bg-slate-900 hover:shadow-md"
                       >
-                        <div className="flex items-stretch gap-3">
-                          {/* Emoji icon in a rounded-corner square */}
-                          <div className="shrink-0 self-stretch">
-                            <div className="flex h-full min-h-[2.25rem] w-9 sm:w-10 items-center justify-center rounded-lg bg-slate-800/70">
+                        <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-stretch">
+                          {/* Emoji icon */}
+                          <div className="shrink-0 self-center sm:self-stretch">
+                            <div className="flex h-9 w-9 sm:w-10 items-center justify-center rounded-lg bg-slate-800/70">
                               <span aria-hidden className="text-xl sm:text-2xl">
                                 📄
                               </span>
@@ -339,11 +351,11 @@ export default function CourseSyllabiListModal({ onClose }: BaseModalProps) {
                             <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                               {/* Left: course + instructor */}
                               <div className="min-w-0">
-                                <p className="text-xs sm:text-sm text-slate-200 truncate">
+                                <p className="text-xs sm:text-sm text-slate-200 truncate text-center sm:text-left">
                                   {syllabus.courseCode} {syllabus.sectionNumber}{" "}
                                   - {courseTitle ?? syllabus.title}
                                 </p>
-                                <p className="mt-0.5 text-xs sm:text-sm text-slate-300 truncate">
+                                <p className="mt-0.5 text-xs sm:text-sm text-slate-300 truncate text-center sm:text-left">
                                   {syllabus.instructorFullName ||
                                     "Instructor TBA"}
                                   {syllabus.instructorEmail && (
@@ -355,9 +367,9 @@ export default function CourseSyllabiListModal({ onClose }: BaseModalProps) {
                                 </p>
                               </div>
 
-                              {/* Right: created / modified, right-aligned */}
+                              {/* Right: created / modified */}
                               {dateLine && (
-                                <div className="mt-1 sm:mt-0 flex-shrink-0 text-right text-[10px] text-slate-500">
+                                <div className="mt-1 sm:mt-0 flex-shrink-0 text-[10px] text-slate-500 text-center sm:text-right">
                                   {dateLine}
                                 </div>
                               )}
@@ -371,20 +383,35 @@ export default function CourseSyllabiListModal({ onClose }: BaseModalProps) {
               </section>
             );
           })}
+
+          {/* Button to view up-to-date syllabi at the very bottom, after last syllabus */}
+          <div className="pt-2">
+            <a
+              href={simpleSyllabusCourseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-rose-500/90 px-3.5 py-1.5 text-xs font-semibold text-slate-50 shadow-sm transition-transform transition-shadow hover:-translate-y-[1px] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+            >
+              <span aria-hidden>🔗</span>
+              <span>View latest syllabi for {code}</span>
+            </a>
+          </div>
         </div>
       )}
 
-      {/* Legal / attribution footer */}
+      {/* Legal / attribution footer (concise, includes caching info) */}
       <div className="mt-4 border-t border-slate-800 pt-3 text-[10px] sm:text-[11px] text-slate-500">
         <p>
           © 2025 Simple Higher Ed. Simple Syllabus is a product of Simple Higher
-          Ed.
+          Ed; syllabus content and imagery remain the property of their
+          respective owners.
         </p>
         <p className="mt-1">
           CoogPlanner is an independent, unofficial tool and is not affiliated
-          with or endorsed by Simple Higher Ed or the University of Houston. All
-          syllabus content and imagery remain the property of their respective
-          owners.
+          with or endorsed by Simple Higher Ed or the University of Houston.
+          Syllabus metadata may be cached for up to 14 days for performance;
+          documents themselves are served directly by Simple Syllabus and may
+          change or be removed at any time.
         </p>
       </div>
     </ModalShell>

@@ -1,6 +1,7 @@
 // app/about/page.tsx
 
 import type { Metadata } from "next";
+import Link from "next/link";
 import { siteConfig } from "@/config/site";
 import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import {
@@ -33,10 +34,26 @@ function fallbackAvatarForLogin(login: string | null | undefined, size = 80) {
   return `https://github.com/${login}.png?size=${size}`;
 }
 
+// ✅ Prevent long GitHub fetches from blocking / timing out on Workers
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error("timeout")), ms);
+    promise
+      .then((v) => {
+        clearTimeout(id);
+        resolve(v);
+      })
+      .catch((err) => {
+        clearTimeout(id);
+        reject(err);
+      });
+  });
+}
+
 function buildCollaborators(
   excludedLogins: string[],
   commits: CommitSummary[],
-  issues: CommitSummary[] | any[],
+  issues: IssueSummary[],
   prs: PullRequestSummary[]
 ): CollaboratorProfile[] {
   const map = new Map<string, CollaboratorProfile>();
@@ -62,20 +79,14 @@ function buildCollaborators(
   for (const c of commits)
     bump(c.authorLogin ?? null, c.authorAvatarUrl ?? null);
 
-  for (const issue of issues as any[]) {
-    const login = (issue as any).authorLogin ?? issue.authorLogin ?? null;
-    const avatar =
-      (issue as any).authorAvatarUrl ??
-      fallbackAvatarForLogin(login, 80) ??
-      null;
-    bump(login, avatar);
+  for (const issue of issues) {
+    const login = issue.authorLogin ?? null;
+    bump(login, fallbackAvatarForLogin(login, 80));
   }
 
   for (const pr of prs) {
-    const login = (pr as any).authorLogin ?? pr.authorLogin ?? null;
-    const avatar =
-      (pr as any).authorAvatarUrl ?? fallbackAvatarForLogin(login, 80) ?? null;
-    bump(login, avatar);
+    const login = pr.authorLogin ?? null;
+    bump(login, fallbackAvatarForLogin(login, 80));
   }
 
   return Array.from(map.values())
@@ -97,6 +108,41 @@ const smallButtonBase =
   "hover:shadow-[0_0_0_3px_rgba(255,255,255,0.03),0_0_22px_rgba(99,102,241,0.16)] " +
   "focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/55 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950";
 
+// ✅ Use Next <Link> for internal routes but disable prefetch (no RSC prefetch storms)
+// ✅ Use <a> for external URLs / mailto
+function SmartLink({
+  href,
+  className,
+  children,
+  newTab = false,
+}: {
+  href: string;
+  className?: string;
+  children: React.ReactNode;
+  newTab?: boolean;
+}) {
+  const isInternal = href.startsWith("/") || href.startsWith("#");
+
+  if (isInternal) {
+    return (
+      <Link href={href} prefetch={false} className={className}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <a
+      href={href}
+      target={newTab ? "_blank" : undefined}
+      rel={newTab ? "noopener noreferrer" : undefined}
+      className={className}
+    >
+      {children}
+    </a>
+  );
+}
+
 function EmojiButton({
   href,
   label,
@@ -111,18 +157,14 @@ function EmojiButton({
   newTab?: boolean;
 }) {
   const cls = size === "sm" ? smallButtonBase : buttonBase;
+
   return (
-    <a
-      href={href}
-      target={newTab ? "_blank" : undefined}
-      rel={newTab ? "noreferrer" : undefined}
-      className={cls}
-    >
+    <SmartLink href={href} newTab={newTab} className={cls}>
       <span aria-hidden className="text-sm">
         {emoji}
       </span>
       <span>{label}</span>
-    </a>
+    </SmartLink>
   );
 }
 
@@ -194,7 +236,7 @@ function SourceRow({
         <a
           href={authorProfileUrl}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="truncate text-xs text-red-400 hover:text-red-300"
         >
           {authorHandle}
@@ -226,13 +268,12 @@ export default async function AboutPage() {
   const repo = github.repo;
   const repoUrl = `https://github.com/${owner}/${repo}`;
 
-  // Update these if your routes differ
-  const legalUrl = "/legal";
-  const privacyUrl = "/privacy";
-  const termsUrl = "/terms";
+  // ✅ Your actual route in the tree is /privacy-legal (not /legal, /privacy, /terms)
+  const legalUrl = "/privacy-legal";
+  const privacyUrl = "/privacy-legal#privacy";
+  const termsUrl = "/privacy-legal#terms";
   const faqUrl = "/faq";
 
-  // Community links (swap to your real URLs)
   const community = {
     instagram: "https://instagram.com/",
     github: repoUrl,
@@ -240,13 +281,12 @@ export default async function AboutPage() {
     email: "mailto:hello@coogplanner.com",
   };
 
-  // SOURCES: set these to the exact pages you want
   const sources = [
     {
       title: "CougarGrades",
       authorHandle: "@CougarGrades",
       authorProfileUrl: "https://github.com/CougarGrades",
-      href: "https://github.com/CougarGrades", // change to the exact repo if you want
+      href: "https://github.com/CougarGrades",
       buttonLabel: "View Source",
       buttonEmoji: "💻",
       description:
@@ -256,7 +296,7 @@ export default async function AboutPage() {
       title: "CougarGrades Public Data",
       authorHandle: "@CougarGrades",
       authorProfileUrl: "https://github.com/CougarGrades",
-      href: "https://github.com/CougarGrades", // change to the exact public-data repo
+      href: "https://github.com/CougarGrades",
       buttonLabel: "View Repo",
       buttonEmoji: "🗂️",
       description:
@@ -265,7 +305,7 @@ export default async function AboutPage() {
     {
       title: "UH Catalog & Official Docs",
       authorHandle: "@UniversityOfHouston",
-      authorProfileUrl: "https://github.com/uh-edu", // change if you prefer
+      authorProfileUrl: "https://github.com/uh-edu",
       href: "https://uh.edu/catalog-undergraduate",
       buttonLabel: "View Catalog",
       buttonEmoji: "📖",
@@ -280,27 +320,21 @@ export default async function AboutPage() {
     avatarUrl: fallbackAvatarForLogin(owner, 96),
   };
 
-  // Put additional maintainers here (if any). Author is separate.
-  const maintainers: TeamProfile[] = [
-    // Example:
-    // {
-    //   name: "Jane Doe",
-    //   login: "janedoe",
-    //   avatarUrl: fallbackAvatarForLogin("janedoe", 96),
-    // },
-  ];
+  const maintainers: TeamProfile[] = [];
 
   let collaborators: CollaboratorProfile[] = [];
   try {
-    const { commits, issues, pullRequests } = await getGithubOverview();
+    // ✅ Prevent GitHub calls from hanging / spiking on Workers
+    const overview = await withTimeout(getGithubOverview(), 900);
 
-    // Exclude the author + maintainers from the Collaborators list
+    const { commits, issues, pullRequests } = overview;
+
     const excludedLogins = [author.login, ...maintainers.map((m) => m.login)];
 
     collaborators = buildCollaborators(
       excludedLogins,
       commits,
-      issues as any[],
+      issues,
       pullRequests
     );
   } catch {

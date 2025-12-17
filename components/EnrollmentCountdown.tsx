@@ -61,7 +61,6 @@ export default function EnrollmentCountdown(props: {
 
   // ---------------- LINE VARIANT ----------------
   if (variant === "line") {
-    // brief placeholder while the client hydrates
     if (timeLeft === null) {
       return (
         <p
@@ -84,6 +83,7 @@ export default function EnrollmentCountdown(props: {
           {siteConfig.enrollment.nextTermLabel} registration is open.{" "}
           <Link
             href={ctaHref}
+            prefetch={false}
             className="font-semibold text-slate-400 underline underline-offset-2 transition-all duration-150 ease-out hover:text-slate-300 hover:underline-offset-4"
           >
             {ctaLabel}
@@ -107,6 +107,7 @@ export default function EnrollmentCountdown(props: {
         .{" "}
         <Link
           href={ctaHref}
+          prefetch={false}
           className="font-semibold text-slate-400 underline underline-offset-2 transition-all duration-150 ease-out hover:text-slate-300 hover:underline-offset-4"
         >
           {ctaLabel}

@@ -16,6 +16,76 @@ import type {
 import { getCourseDisplayCode } from "@/lib/courses";
 import { getSupabaseServerClient } from "./supabaseServer";
 
+// --- Cloudflare edge cache helpers ----------------------------------
+// React's cache() dedupes within a single render/request. Cloudflare edge cache
+// (caches.default) persists across requests at the POP, preventing CPU/DB spikes.
+
+const COURSE_CACHE_VERSION = "v1";
+const COURSE_CACHE_TTL_SECONDS = 60 * 60 * 6; // 6 hours
+
+function getEdgeCache(): Cache | null {
+  // In Workers: globalThis.caches.default exists
+  // In local Node/dev: it may not.
+  const c = (globalThis as any)?.caches?.default;
+  return c ? (c as Cache) : null;
+}
+
+function buildEdgeCacheRequest(key: string): Request {
+  // Key should already be a safe path-like string.
+  return new Request(`https://cache.coogplanner.com/${key}`, { method: "GET" });
+}
+
+async function edgeCacheGetJson<T>(key: string): Promise<T | null> {
+  const cacheStore = getEdgeCache();
+  if (!cacheStore) return null;
+
+  try {
+    const req = buildEdgeCacheRequest(key);
+    const hit = await cacheStore.match(req);
+    if (!hit) return null;
+
+    // Ensure we only attempt JSON on JSON responses.
+    const ct = hit.headers.get("Content-Type") || "";
+    if (!ct.includes("application/json")) return null;
+
+    return (await hit.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+async function edgeCachePutJson<T>(key: string, data: T): Promise<void> {
+  const cacheStore = getEdgeCache();
+  if (!cacheStore) return;
+
+  try {
+    const req = buildEdgeCacheRequest(key);
+
+    const res = new Response(JSON.stringify(data), {
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": `public, max-age=${COURSE_CACHE_TTL_SECONDS}`,
+      },
+    });
+
+    await cacheStore.put(req, res);
+  } catch {
+    // Never fail the request due to caching issues.
+  }
+}
+
+// Prevent thundering-herd on a cache miss within the same isolate:
+const inflight = new Map<string, Promise<any>>();
+
+async function withInFlight<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const existing = inflight.get(key);
+  if (existing) return (await existing) as T;
+
+  const p = fn().finally(() => inflight.delete(key));
+  inflight.set(key, p);
+  return (await p) as T;
+}
+
 // --- helpers --------------------------------------------------------
 
 function parseCourseCode(rawCode: string): { subject: string; number: string } {
@@ -352,7 +422,6 @@ async function _getCourseHeaderByCodeFromDb(
   rawCode: string
 ): Promise<CourseHeader | null> {
   const { subject, number } = parseCourseCode(rawCode);
-
   if (!subject || !number) return null;
 
   const supabase = getSupabaseServerClient();
@@ -410,7 +479,29 @@ async function _getCourseHeaderByCodeFromDb(
   return { name, displayCode, subject, number, badges };
 }
 
-export const getCourseHeaderByCodeFromDb = cache(_getCourseHeaderByCodeFromDb);
+async function _getCourseHeaderByCodeEdgeCached(
+  rawCode: string
+): Promise<CourseHeader | null> {
+  const { subject, number } = parseCourseCode(rawCode);
+  if (!subject || !number) return null;
+
+  const key = `${subject}-${number}`;
+  const cacheKey = `${COURSE_CACHE_VERSION}/course-header/${key}.json`;
+
+  return withInFlight(cacheKey, async () => {
+    const cached = await edgeCacheGetJson<CourseHeader>(cacheKey);
+    if (cached) return cached;
+
+    const fresh = await _getCourseHeaderByCodeFromDb(rawCode);
+    if (fresh) await edgeCachePutJson(cacheKey, fresh);
+    return fresh;
+  });
+}
+
+// React cache = avoids duplicate work within the same render/request
+export const getCourseHeaderByCodeFromDb = cache(
+  _getCourseHeaderByCodeEdgeCached
+);
 
 // --- main loader ----------------------------------------------------
 
@@ -538,4 +629,24 @@ async function _getCourseByCodeFromDb(rawCode: string): Promise<Course | null> {
   return course;
 }
 
-export const getCourseByCodeFromDb = cache(_getCourseByCodeFromDb);
+async function _getCourseByCodeEdgeCached(
+  rawCode: string
+): Promise<Course | null> {
+  const { subject, number } = parseCourseCode(rawCode);
+  if (!subject || !number) return null;
+
+  const key = `${subject}-${number}`;
+  const cacheKey = `${COURSE_CACHE_VERSION}/course/${key}.json`;
+
+  return withInFlight(cacheKey, async () => {
+    const cached = await edgeCacheGetJson<Course>(cacheKey);
+    if (cached) return cached;
+
+    const fresh = await _getCourseByCodeFromDb(rawCode);
+    if (fresh) await edgeCachePutJson(cacheKey, fresh);
+    return fresh;
+  });
+}
+
+// React cache = avoids duplicate work within the same render/request
+export const getCourseByCodeFromDb = cache(_getCourseByCodeEdgeCached);

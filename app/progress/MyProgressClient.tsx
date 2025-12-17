@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 
 type CourseStatus = "completed" | "in-progress";
 
@@ -58,23 +58,22 @@ const remainingSemesterOptions = Array.from({ length: 20 }, (_, i) =>
   String(i + 1)
 );
 
-function getCurrentTermLabel(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth(); // 0-11
+function getCurrentTermLabel(base: Date): string {
+  const year = base.getFullYear();
+  const month = base.getMonth(); // 0-11
   const season = month >= 6 ? "Fall" : "Spring";
   return `${season} ${year}`;
 }
 
 function getProjectedGraduationLabel(
-  remainingSemesters: string
+  remainingSemesters: string,
+  base: Date
 ): string | null {
   const n = parseInt(remainingSemesters, 10);
   if (!Number.isFinite(n) || n <= 0) return null;
 
-  const now = new Date();
-  let year = now.getFullYear();
-  const month = now.getMonth(); // 0-11
+  let year = base.getFullYear();
+  const month = base.getMonth(); // 0-11
 
   // Rough model: Spring / Fall semesters
   const seasons = ["Spring", "Fall"];
@@ -88,11 +87,26 @@ function getProjectedGraduationLabel(
   return `${season} ${year}`;
 }
 
+function makeId(): string {
+  // Only runs on user interaction, but this is still the nicest unique id.
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 export default function MyDegreeClient() {
+  const [mounted, setMounted] = useState(false);
+
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [courses, setCourses] = useState<CourseRow[]>(initialCourses);
   const [selectedDegree, setSelectedDegree] = useState<string>("");
   const [remainingSemesters, setRemainingSemesters] = useState<string>("4");
+
+  useEffect(() => {
+    // Prevent Date-based hydration mismatches by computing labels only after mount.
+    setMounted(true);
+  }, []);
 
   const completedCourses = courses.filter(
     (course) => course.status === "completed"
@@ -101,8 +115,11 @@ export default function MyDegreeClient() {
     (course) => course.status === "in-progress"
   );
 
-  const currentTermLabel = getCurrentTermLabel();
-  const projectedGraduation = getProjectedGraduationLabel(remainingSemesters);
+  const now = mounted ? new Date() : null;
+  const currentTermLabel = now ? getCurrentTermLabel(now) : "—";
+  const projectedGraduation = now
+    ? getProjectedGraduationLabel(remainingSemesters, now)
+    : null;
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const file = event.target.files?.[0];
@@ -134,7 +151,7 @@ export default function MyDegreeClient() {
 
   const addCourse = (status: CourseStatus) => {
     const newCourse: CourseRow = {
-      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      id: makeId(),
       code: "",
       title: "",
       term: "",
@@ -271,10 +288,12 @@ export default function MyDegreeClient() {
               <span className="font-semibold text-slate-100">
                 {projectedGraduation}
               </span>
-            ) : (
+            ) : mounted ? (
               <span className="text-slate-500">
                 Choose remaining semesters to see an estimate.
               </span>
+            ) : (
+              <span className="text-slate-500">Loading…</span>
             )}
           </p>
         </div>

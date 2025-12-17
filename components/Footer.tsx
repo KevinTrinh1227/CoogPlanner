@@ -5,8 +5,33 @@ import { siteConfig } from "@/config/site";
 import { getRepoMetaCached } from "@/lib/github";
 import Tooltip from "@/components/Tooltip";
 
+type RepoMeta = {
+  latestTag?: string | null;
+};
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error("timeout")), ms);
+    promise
+      .then((v) => {
+        clearTimeout(id);
+        resolve(v);
+      })
+      .catch((err) => {
+        clearTimeout(id);
+        reject(err);
+      });
+  });
+}
+
 export default async function Footer() {
-  const repoMeta = await getRepoMetaCached();
+  // ✅ Never let GitHub metadata block rendering (prevents CPU spikes)
+  let repoMeta: RepoMeta | null = null;
+  try {
+    repoMeta = await withTimeout(getRepoMetaCached() as Promise<RepoMeta>, 800);
+  } catch {
+    repoMeta = null;
+  }
 
   const version = repoMeta?.latestTag ?? "v0.0.0-dev";
   const year = new Date().getFullYear();
@@ -14,7 +39,6 @@ export default async function Footer() {
   const githubRepoUrl = `https://github.com/${siteConfig.github.owner}/${siteConfig.github.repo}`;
   const githubIssuesUrl = `${githubRepoUrl}/issues`;
 
-  // Recently Updated (temporary placeholder)
   const latestUpdateNumber = 0;
   const recentlyUpdatedLabel = new Intl.DateTimeFormat("en-US", {
     month: "short",
@@ -27,9 +51,10 @@ export default async function Footer() {
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-12 text-center text-[12px] text-slate-400 md:flex-row md:items-start md:justify-between md:text-left">
         {/* Left */}
         <div className="space-y-2 md:text-left">
-          {/* Logo + domain (ONE container scales together on hover) */}
+          {/* Logo + domain */}
           <Link
             href="/"
+            prefetch={false} // ✅ stop RSC prefetch storms
             className="inline-flex items-center justify-center gap-2 text-slate-50 transition-transform duration-150 ease-out will-change-transform hover:scale-95 active:scale-90 md:justify-start"
           >
             <Image
@@ -53,6 +78,7 @@ export default async function Footer() {
             (
             <Link
               href="/updates"
+              prefetch={false} // ✅
               className="font-semibold text-red-300 transition-colors hover:text-red-200"
             >
               #{latestUpdateNumber}
@@ -103,7 +129,7 @@ export default async function Footer() {
             </Tooltip>
           </div>
 
-          {/* Source code + Report issues buttons (emoji icons) */}
+          {/* Source + Issues */}
           <div className="flex flex-wrap items-center justify-center gap-2 pt-1 md:justify-start">
             <Link
               href={githubRepoUrl}
@@ -129,7 +155,6 @@ export default async function Footer() {
 
         {/* Right */}
         <div className="space-y-2 md:text-right">
-          {/* Share + Support + Notice buttons (emoji icons) */}
           <div className="flex flex-wrap items-center justify-center gap-2 pt-1 md:justify-end">
             <button
               type="button"
@@ -151,6 +176,7 @@ export default async function Footer() {
 
             <Link
               href="/privacy-legal"
+              prefetch={false} // ✅
               className="inline-flex items-center justify-center gap-1 rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-1.5 text-[11px] font-semibold text-slate-100 hover:border-slate-500 hover:bg-slate-800"
             >
               <span aria-hidden="true">🛡️</span>
@@ -158,7 +184,6 @@ export default async function Footer() {
             </Link>
           </div>
 
-          {/* Messages */}
           <p className="text-[12px] text-slate-400">
             An unofficial UH student tool. Not affiliated with the University of
             Houston.
@@ -176,7 +201,6 @@ export default async function Footer() {
             .
           </p>
 
-          {/* Copyright (Coog Planner clickable) */}
           <p className="text-[11px] text-slate-500">
             © {year}{" "}
             <Link

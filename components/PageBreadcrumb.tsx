@@ -1,4 +1,3 @@
-// components/PageBreadcrumb.tsx
 "use client";
 
 import Link from "next/link";
@@ -44,7 +43,8 @@ export function PageBreadcrumb({
   const handleProtectedAction = useCallback(
     (kind: "favorite" | "cart") => {
       if (!isSignedIn) {
-        router.push(`/signin?redirect=${encodeURIComponent(pathname ?? "/")}`);
+        // ✅ FIX: your app uses /login (not /signin)
+        router.push(`/login?redirect=${encodeURIComponent(pathname ?? "/")}`);
         return;
       }
 
@@ -99,7 +99,6 @@ export function PageBreadcrumb({
               className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-950/80 px-2.5 py-1 text-xs md:text-sm font-medium text-slate-100 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/70 hover:bg-slate-900/90 hover:text-brand-light"
             >
               <span aria-hidden>⭐</span>
-              {/* Only show text on >= sm */}
               <span className="hidden sm:inline">Favorite</span>
             </button>
 
@@ -127,7 +126,12 @@ export function PageBreadcrumb({
       {/* LEFT on desktop / INLINE ABOVE buttons on mobile when wrapping: breadcrumb trail */}
       <div className="order-1 flex min-w-0 flex-1 items-center gap-1 overflow-x-auto whitespace-nowrap md:order-1">
         {/* Root: Home */}
-        <Link href="/" className={clickableCrumbClasses} title="Go to Home">
+        <Link
+          href="/"
+          prefetch={false}
+          className={clickableCrumbClasses}
+          title="Go to Home"
+        >
           Home
         </Link>
 
@@ -140,7 +144,11 @@ export function PageBreadcrumb({
           return (
             <div key={`${crumb.label}-${index}`} className="flex items-center">
               {crumb.href && !isLast ? (
-                <Link href={crumb.href} className={clickableCrumbClasses}>
+                <Link
+                  href={crumb.href}
+                  prefetch={false}
+                  className={clickableCrumbClasses}
+                >
                   {crumb.label}
                 </Link>
               ) : (

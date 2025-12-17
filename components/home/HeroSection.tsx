@@ -1,4 +1,4 @@
-// components/HeroSection.tsx
+// components/home/HeroSection.tsx
 import Link from "next/link";
 import EnrollmentCountdown from "@/components/EnrollmentCountdown";
 
@@ -31,6 +31,7 @@ export default function HeroSection() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/progress"
+              prefetch={false} // ✅ prevent RSC prefetch storms (Workers CPU)
               className="rounded-lg bg-red-400 px-4 py-2 text-xs font-medium text-slate-950 shadow-sm hover:bg-red-300 md:px-5 md:text-sm"
             >
               🚀 My Academic Progress
@@ -38,6 +39,7 @@ export default function HeroSection() {
 
             <Link
               href="/search"
+              prefetch={false} // ✅ prevent RSC prefetch storms (Workers CPU)
               className="rounded-lg border border-slate-700 bg-transparent px-4 py-2 text-xs font-medium text-slate-200 hover:border-slate-500 hover:bg-slate-900 md:px-5 md:text-sm"
             >
               🔎 Browse UH Academics

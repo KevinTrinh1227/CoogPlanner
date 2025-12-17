@@ -1,4 +1,3 @@
-// components/Navbar.tsx
 "use client";
 
 import Link from "next/link";
@@ -40,7 +39,7 @@ export default function Navbar() {
     setMobileOpen(false);
   };
 
-  // Close dropdowns (desktop + mobile) when scrolling
+  // Close dropdowns (desktop + mobile) on scroll
   useEffect(() => {
     const handleScroll = () => {
       setActiveMenu(null);
@@ -58,6 +57,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link
             href="/"
+            prefetch={false}
             className="group flex items-center gap-2"
             onClick={closeAll}
           >
@@ -74,7 +74,7 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop center nav + dropdown */}
+          {/* Desktop nav */}
           <DesktopNavbar
             activeMenu={activeMenu}
             openMenu={openMenu}
@@ -86,13 +86,17 @@ export default function Navbar() {
           <div className="hidden items-center gap-3 md:flex">
             <Link
               href="/login"
+              prefetch={false}
               className="text-sm font-medium text-slate-300 hover:text-slate-50"
+              onClick={closeAll}
             >
               Sign in
             </Link>
             <Link
               href="/signup"
+              prefetch={false}
               className="rounded-lg bg-red-400 px-4 py-1.5 text-sm font-semibold text-slate-950 shadow-sm hover:bg-red-300"
+              onClick={closeAll}
             >
               Sign up
             </Link>
@@ -114,7 +118,7 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Mobile overlay + nav panel */}
+      {/* Mobile overlay */}
       <MobileNavbar mobileOpen={mobileOpen} closeAll={closeAll} />
     </>
   );

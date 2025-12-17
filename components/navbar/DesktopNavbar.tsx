@@ -1,4 +1,3 @@
-// components/navbar/DesktopNavbar.tsx
 "use client";
 
 import Link from "next/link";
@@ -24,20 +23,18 @@ export default function DesktopNavbar(props: {
   return (
     <div className="hidden flex-1 items-center justify-center md:flex">
       <div className="relative" onMouseLeave={scheduleCloseMenu}>
-        {/* ✅ ONE container for the whole nav row (outline + bg) */}
         <div className="rounded-full border border-slate-800 bg-slate-950/50 px-2 py-1">
           <nav className="flex items-center gap-1 text-sm font-medium text-slate-300">
             {NAV_LINKS.map((item) => {
               const isActive = activeMenu === item.id;
 
-              // ✅ items no longer have their own background by default
               const baseClasses =
-                "px-3 py-1.5 rounded-md transition-colors cursor-pointer";
+                "cursor-pointer rounded-md px-3 py-1.5 transition-colors";
               const stateClasses = isActive
                 ? "bg-slate-900 text-slate-50"
                 : "text-slate-300 hover:bg-slate-900 hover:text-slate-50";
 
-              // Dropdown-only item (Resources)
+              // Dropdown-only item (e.g. Resources)
               if (item.dropdownOnly) {
                 return (
                   <button
@@ -54,7 +51,6 @@ export default function DesktopNavbar(props: {
                 );
               }
 
-              // Normal link items
               const handleMouseEnter = () => {
                 if (item.hasDropdown) openMenu(item.id);
                 else openMenu(null);
@@ -64,8 +60,10 @@ export default function DesktopNavbar(props: {
                 <Link
                   key={item.id}
                   href={item.href ?? "#"}
+                  prefetch={false}
                   className={`${baseClasses} ${stateClasses}`}
                   onMouseEnter={handleMouseEnter}
+                  onClick={closeAll}
                 >
                   {item.label}
                 </Link>
@@ -81,8 +79,8 @@ export default function DesktopNavbar(props: {
           }}
           className={`absolute left-1/2 top-full mt-2 w-[min(48rem,81vw)] -translate-x-1/2 rounded-2xl border border-slate-800 bg-slate-950/95 p-4 text-sm shadow-2xl shadow-black/50 transition-all duration-150 ease-out ${
             activeMenu
-              ? "pointer-events-auto opacity-100 translate-y-0"
-              : "pointer-events-none opacity-0 -translate-y-1"
+              ? "pointer-events-auto translate-y-0 opacity-100"
+              : "pointer-events-none -translate-y-1 opacity-0"
           }`}
         >
           {desktopItems.length > 0 && (
@@ -96,6 +94,7 @@ export default function DesktopNavbar(props: {
                     <Link
                       key={item.title}
                       href={item.href}
+                      prefetch={false}
                       className="group h-full rounded-xl px-3 py-2 hover:bg-slate-900"
                       onClick={closeAll}
                       target={isExternal ? "_blank" : undefined}
@@ -112,7 +111,7 @@ export default function DesktopNavbar(props: {
                         </div>
 
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-50 group-hover:text-slate-50">
+                          <p className="text-sm font-semibold text-slate-50">
                             {item.title}
                           </p>
                           <p className="mt-1 text-xs text-slate-400">
@@ -133,6 +132,7 @@ export default function DesktopNavbar(props: {
 
                   <Link
                     href={footer.rightHref}
+                    prefetch={false}
                     className="ml-4 text-xs font-semibold text-red-400 hover:text-red-300"
                     onClick={closeAll}
                     target={footer.rightExternal ? "_blank" : undefined}

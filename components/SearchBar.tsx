@@ -233,7 +233,7 @@ export default function SearchBar() {
             <div className="relative flex-1 h-full">
               <input
                 type="text"
-                placeholder="Search"
+                placeholder="Search UH Academics"
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
@@ -275,13 +275,13 @@ export default function SearchBar() {
             <button
               type="button"
               onClick={() => setFiltersOpen((prev) => !prev)}
-              className="mr-1 inline-flex items-center gap-1.5 rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-1.5 text-[11px] font-medium text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-900"
+              className="mr-1 inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-[16px] text-slate-300 transition-colors hover:bg-slate-900/60 hover:text-slate-50 md:text-sm"
             >
-              <span className="inline-flex h-4 w-4 items-center justify-center">
+              <span className="inline-flex h-4 w-4 items-center justify-center md:h-4 md:w-4">
                 <svg
                   viewBox="0 0 20 20"
                   aria-hidden="true"
-                  className="h-4 w-4 text-slate-200"
+                  className="h-4 w-4 text-current"
                 >
                   <path
                     d="M4 5h12M4 10h12M4 15h12M8 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm6 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm-6 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"
@@ -293,7 +293,7 @@ export default function SearchBar() {
                   />
                 </svg>
               </span>
-              <span>Filters</span>
+              <span className="font-medium">Filters</span>
             </button>
           </div>
 
@@ -408,7 +408,7 @@ export default function SearchBar() {
               {isQueryEmpty && recentCourses.length > 0 && (
                 <div>
                   <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                    Recent searches
+                    🕙 Recent Searches
                   </p>
                   <div className="space-y-1.5">
                     {recentCourses.map((course) => (
@@ -434,7 +434,7 @@ export default function SearchBar() {
               {matchedCourses.length > 0 && (
                 <div>
                   <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                    Courses
+                    📚 Courses
                   </p>
                   <div className="space-y-1.5">
                     {matchedCourses.map((course: CourseSearchEntry) => (

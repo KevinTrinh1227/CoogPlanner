@@ -1,9 +1,8 @@
 // app/courses/[code]/page.tsx
 import { notFound } from "next/navigation";
-import { getCourseDisplayCode, type Course } from "@/lib/courses";
-import { getCourseByCodeFromDb } from "@/lib/courseLoader";
+import React, { Suspense } from "react";
+
 import { PageBreadcrumb } from "@/components/PageBreadcrumb";
-import CourseHero from "@/components/course/CourseHero";
 import CourseAnalysisCard from "@/components/course/CourseAnalysisCard";
 import CourseSnapshotStatsCard from "@/components/course/CourseSnapshotStatsCard";
 import CourseGradeDistributionCard from "@/components/course/CourseGradeDistributionCard";
@@ -11,15 +10,18 @@ import CourseInstructorsSection from "@/components/course/CourseInstructorsSecti
 import CourseInstructorAnalysisCard from "@/components/course/CourseInstructorAnalysisCard";
 import CoursePastSectionsCard from "@/components/course/CoursePastSectionsCard";
 
+import {
+  getCourseByCodeFromDb,
+  getCourseHeaderByCodeFromDb,
+} from "@/lib/courseLoader";
+import { getCourseDisplayCode, type Course } from "@/lib/courses";
+
+import CourseHeroShell from "./CourseHeroShell";
+
 type CoursePageProps = {
-  // params is a Promise in async server components
   params: Promise<{ code: string }>;
 };
 
-// One instructor summary object
-type InstructorSummary = Course["instructors"][number];
-
-// Simple horizontal divider to match the Hero's bottom border vibe
 function SectionDivider() {
   return (
     <div className="my-4 border-b border-slate-800/80" aria-hidden="true" />
@@ -30,23 +32,15 @@ function formatGpa(value: number | null): string {
   if (value == null) return "-";
   return value.toFixed(2);
 }
-
 function formatPercent(value: number | null): string {
   if (value == null) return "-";
   return `${value.toFixed(2)}%`;
 }
-
 function formatNumber(value: number | null): string {
   if (value == null) return "-";
   return value.toLocaleString();
 }
 
-/**
- * Build a human-readable analysis sentence for the course.
- * - Uses difficulty_label from DB when present (e.g. "Very Easy", "Hard").
- * - Falls back to a phrase derived from difficulty_score.
- * - Defaults to "moderate" if nothing is available.
- */
 function buildAnalysisText(course: Course): string {
   const code = getCourseDisplayCode(course);
   const avgGpa = course.badges.gpa ?? course.snapshot.avgGpa ?? null;
@@ -56,19 +50,15 @@ function buildAnalysisText(course: Course): string {
   const score = course.badges.difficultyScore;
 
   let difficultyPhrase: string;
-
-  // 1) Prefer label from DB/cache (“Very Easy”, “Hard”, etc.)
   if (typeof rawLabel === "string" && rawLabel.trim().length > 0) {
     difficultyPhrase = rawLabel.trim().toLowerCase();
   } else if (typeof score === "number") {
-    // 2) Fallback to score-based phrase if label missing
     if (score <= 2.1) difficultyPhrase = "very easy";
     else if (score <= 2.7) difficultyPhrase = "easy";
     else if (score <= 3.3) difficultyPhrase = "moderate";
     else if (score <= 3.9) difficultyPhrase = "hard";
     else difficultyPhrase = "very hard";
   } else {
-    // 3) Last-resort default
     difficultyPhrase = "moderate";
   }
 
@@ -87,7 +77,7 @@ function buildAnalysisText(course: Course): string {
         )}% of students withdraw, so most who start the class finish it.`
       : "Most students who start the class finish it.";
 
-  return `${code} – ${course.name} typically yields ${gpaPart}. Expect ${difficultyPhrase} difficulty with a ${trend} GPA trend over recent terms. ${dropPart} This course is usually taken after intro programming and is a key part of the algorithms / data structures core for CS majors.`;
+  return `${code} – ${course.name} typically yields ${gpaPart}. Expect ${difficultyPhrase} difficulty with a ${trend} GPA trend over recent terms. ${dropPart}`;
 }
 
 function getTermRange(pastSections: Course["pastSections"]) {
@@ -122,20 +112,22 @@ function getTermRange(pastSections: Course["pastSections"]) {
   };
 }
 
-export default async function CourseDetailPage({ params }: CoursePageProps) {
-  const resolvedParams = await params;
-  const rawCode = resolvedParams.code; // e.g. "COSC-3320"
+function BodySkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="h-28 rounded-2xl border border-slate-800 bg-slate-900/40" />
+      <div className="h-56 rounded-2xl border border-slate-800 bg-slate-900/40" />
+      <div className="h-64 rounded-2xl border border-slate-800 bg-slate-900/40" />
+    </div>
+  );
+}
 
-  if (!rawCode) {
-    notFound();
-  }
-
-  // DB-backed loader
-  const course = await getCourseByCodeFromDb(rawCode);
-
-  if (!course) {
-    notFound();
-  }
+async function CourseBody({
+  coursePromise,
+}: {
+  coursePromise: Promise<Course>;
+}) {
+  const course = await coursePromise;
 
   const displayCode = getCourseDisplayCode(course);
   const analysisText = buildAnalysisText(course);
@@ -146,31 +138,13 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
   const totalSections = course.pastSections.length;
 
   const pageSize = 10;
-  const instructorPages: InstructorSummary[][] = [];
+  const instructorPages: Course["instructors"][number][][] = [];
   for (let i = 0; i < totalInstructors; i += pageSize) {
     instructorPages.push(course.instructors.slice(i, i + pageSize));
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10 lg:py-14">
-      <PageBreadcrumb
-        crumbs={[
-          { label: "Courses", href: "/courses" },
-          { label: displayCode },
-        ]}
-        showStarAndCart
-        className="mb-3"
-      />
-
-      {/* Course header / hero */}
-      <CourseHero
-        course={course}
-        // For now, just keep catalog info as you had it
-        catalogCount={1}
-        hasCatalogLink={true}
-      />
-
-      {/* separator after CourseHero */}
+    <>
       <SectionDivider />
 
       <CourseAnalysisCard analysisText={analysisText} />
@@ -190,7 +164,6 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
         formatNumber={formatNumber}
       />
 
-      {/* separator after grade distribution */}
       <SectionDivider />
 
       <CourseInstructorAnalysisCard course={course} />
@@ -202,7 +175,6 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
         totalSections={totalSections}
       />
 
-      {/* separator after instructor analysis */}
       <SectionDivider />
 
       <CoursePastSectionsCard
@@ -211,6 +183,51 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
         totalSections={totalSections}
         termRange={termRange}
       />
+    </>
+  );
+}
+
+export default async function CourseDetailPage({ params }: CoursePageProps) {
+  const resolvedParams = await params;
+  const rawCode = resolvedParams.code;
+
+  if (!rawCode) notFound();
+
+  // ✅ fast header info (not lazy)
+  const header = await getCourseHeaderByCodeFromDb(rawCode);
+  if (!header) notFound();
+
+  // ✅ full fetch streams, but the promise is guaranteed to resolve to Course (or 404)
+  const coursePromise: Promise<Course> = getCourseByCodeFromDb(rawCode).then(
+    (c) => {
+      if (!c) notFound();
+      return c;
+    }
+  );
+
+  return (
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10 lg:py-14">
+      <PageBreadcrumb
+        crumbs={[
+          { label: "Courses", href: "/courses" },
+          { label: header.displayCode },
+        ]}
+        showStarAndCart
+        className="mb-3"
+      />
+
+      <CourseHeroShell
+        name={header.name}
+        displayCode={header.displayCode}
+        badges={header.badges}
+        coursePromise={coursePromise}
+        catalogCount={1}
+        hasCatalogLink={true}
+      />
+
+      <Suspense fallback={<BodySkeleton />}>
+        <CourseBody coursePromise={coursePromise} />
+      </Suspense>
     </div>
   );
 }

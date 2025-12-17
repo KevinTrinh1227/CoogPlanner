@@ -1,7 +1,7 @@
 // config/site.ts
 
 export const siteConfig = {
-  name: "Coog Planner",
+  name: "CoogPlanner",
   domain: "CoogPlanner.com",
   tagline: "UH degree & semester planning",
 

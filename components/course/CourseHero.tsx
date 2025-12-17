@@ -2,6 +2,7 @@
 import React from "react";
 import type { Course } from "@/lib/courses";
 import { getCourseDisplayCode } from "@/lib/courses";
+
 import CourseMetricBadgesRow from "@/components/course/CourseMetricBadgesRow";
 import CourseSyllabiButton from "@/components/course/CourseSyllabiButton";
 
@@ -28,14 +29,10 @@ interface CourseHeroProps {
  */
 function normalizeCatalogText(text?: string | null): string {
   if (!text) return "";
-  return (
-    text
-      .trim()
-      // Remove spaces before punctuation like . , ; : ! ?
-      .replace(/\s+([.,;:!?])/g, "$1")
-      // Collapse multiple spaces into a single space
-      .replace(/\s+/g, " ")
-  );
+  return text
+    .trim()
+    .replace(/\s+([.,;:!?])/g, "$1")
+    .replace(/\s+/g, " ");
 }
 
 export default function CourseHero({
@@ -47,7 +44,7 @@ export default function CourseHero({
   const { badges, catalog } = course;
   const displayCode = getCourseDisplayCode(course);
 
-  // --- Derived credit line from catalog info ---
+  // Derived credit line from catalog info
   const creditHours = catalog.creditHours;
   const lectureHours = catalog.lectureHours;
   const labHours = catalog.labHours;
@@ -60,7 +57,7 @@ export default function CourseHero({
       lectureHours != null ? lectureHours : "N/A"
     } · Lab Hours: ${labHours != null ? labHours : "N/A"})`;
 
-  // Normalized catalog text fields
+  // Normalized catalog fields
   const prereqText = normalizeCatalogText(catalog.prerequisites);
   const descriptionText = normalizeCatalogText(catalog.description);
 
@@ -75,6 +72,7 @@ export default function CourseHero({
   return (
     <section className="pb-0">
       <div className="space-y-3">
+        {/* Title + code (render once, no duplication) */}
         <div className="space-y-1">
           <h1 className="text-balance text-xl font-semibold tracking-tight text-slate-50 sm:text-2xl md:text-3xl">
             {course.name}
@@ -84,41 +82,40 @@ export default function CourseHero({
           </p>
         </div>
 
+        {/* Credit line (not full width) */}
         {creditLine && (
-          <p className="break-words text-xs font-medium text-slate-200 md:text-sm">
+          <p className="inline-block w-fit break-words text-xs font-medium text-slate-200 md:text-sm">
             {creditLine}
           </p>
         )}
 
-        {/* GPA / Drop Rate / Difficulty / GPA Trend badges */}
+        {/* GPA / Drop Rate / Difficulty / GPA Trend */}
         <CourseMetricBadgesRow badges={badges} />
       </div>
 
       {/* Description & metadata */}
       <div className="mt-5 space-y-3">
         {/* Pre & Co-requisites */}
-        {prereqText && (
-          <div className="mt-1">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Pre &amp; Co-requisites
-            </p>
-            <p className="mt-1 break-words text-sm leading-relaxed text-slate-200 md:text-[15px]">
-              {prereqText}
-            </p>
-          </div>
-        )}
+        <div className="mt-1">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            Pre &amp; Co-requisites
+          </p>
+          <p className="mt-1 break-words text-sm leading-relaxed text-slate-200 md:text-[15px]">
+            {prereqText || "N/A"}
+          </p>
+        </div>
 
-        {descriptionText && (
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Description
-            </p>
-            <p className="mt-1 break-words text-sm leading-relaxed text-slate-200 md:text-[15px]">
-              {descriptionText}
-            </p>
-          </div>
-        )}
+        {/* Description */}
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            Description
+          </p>
+          <p className="mt-1 break-words text-sm leading-relaxed text-slate-200 md:text-[15px]">
+            {descriptionText || "N/A"}
+          </p>
+        </div>
 
+        {/* Repeatability / TCCNS / Fee */}
         <div className="break-words text-xs text-slate-300 md:text-sm">
           <span className="font-semibold text-slate-400">Repeatability:</span>{" "}
           <span>{catalog.repeatability ?? "N/A"}</span>
@@ -134,7 +131,7 @@ export default function CourseHero({
           <span>{catalog.additionalFee ?? "N/A"}</span>
         </div>
 
-        {/* Requirements & groups */}
+        {/* Requirements chips */}
         {fulfills.length > 0 && (
           <div className="space-y-1">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
@@ -159,8 +156,8 @@ export default function CourseHero({
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             Course Resources &amp; Links
           </p>
+
           <div className="flex flex-wrap gap-2">
-            {/* Past Section Times */}
             {showPastSectionsButton && (
               <button
                 type="button"
@@ -171,13 +168,11 @@ export default function CourseHero({
               </button>
             )}
 
-            {/* Course Syllabi – opens modal, fetch happens in the modal */}
             <CourseSyllabiButton
-              displayCode={displayCode}
+              displayCode={getCourseDisplayCode({ code: course.code } as any)}
               courseTitle={course.name}
             />
 
-            {/* Catalog Sources */}
             {showCatalogButton && (
               <button
                 type="button"
@@ -188,7 +183,6 @@ export default function CourseHero({
               </button>
             )}
 
-            {/* More Information / popup trigger (dead for now) */}
             <button
               type="button"
               className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900/80 px-3.5 py-1.5 text-xs font-medium text-slate-100 transition-colors hover:bg-slate-800 hover:text-slate-50 md:text-sm"

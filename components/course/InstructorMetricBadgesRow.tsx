@@ -2,17 +2,6 @@ import React from "react";
 import type { InstructorSummary } from "@/lib/courses";
 import MetricBadge, { type BadgeTone } from "@/components/ui/MetricBadge";
 
-const StarFilled: React.FC<{ className?: string }> = ({ className }) => (
-  <svg
-    className={className}
-    viewBox="0 0 20 20"
-    fill="currentColor"
-    aria-hidden="true"
-  >
-    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.955a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.449a1 1 0 00-.364 1.118l1.287 3.955c.3.921-.755 1.688-1.54 1.118l-3.37-2.449a1 1 0 00-1.175 0l-3.37 2.449c-.785.57-1.84-.197-1.54-1.118l1.287-3.955a1 1 0 00-.364-1.118L2.06 9.382c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.955z" />
-  </svg>
-);
-
 interface InstructorMetricBadgesRowProps {
   instructor: InstructorSummary;
 }
@@ -23,11 +12,24 @@ export default function InstructorMetricBadgesRow({
   const gpaBadge = getGpaBadge(instructor);
   const dropBadge = getDropBadge(instructor);
 
-  const rmpNumeric = instructor.rating ?? 4.95; // placeholder
-  const rmpValue = rmpNumeric.toFixed(2);
+  // Our own internal rating as a percentage (0–100). 100% = everyone loves them.
+  const ratingPctNumeric = instructor.rating ?? null;
 
-  // If absolutely nothing, don't render extra space
-  if (!gpaBadge && !dropBadge && !rmpValue && !instructor) {
+  const ratingValue =
+    ratingPctNumeric == null ? "N/A" : `${formatPercent(ratingPctNumeric)}%`;
+
+  const ratingTone: BadgeTone =
+    ratingPctNumeric == null
+      ? "info"
+      : ratingPctNumeric >= 80
+      ? "good"
+      : ratingPctNumeric >= 60
+      ? "warning"
+      : "bad";
+
+  // If absolutely nothing meaningful, don't render extra space
+  // (Difficulty is still placeholder below, so this checks real stats only.)
+  if (!gpaBadge && !dropBadge && ratingPctNumeric == null) {
     return null;
   }
 
@@ -45,18 +47,7 @@ export default function InstructorMetricBadgesRow({
         />
       )}
 
-      {/* Placeholder RMP badge – logic later */}
-      <MetricBadge
-        label="RMP"
-        value={rmpValue}
-        valueNode={
-          <>
-            {rmpValue}
-            <StarFilled className="h-3 w-3" />
-          </>
-        }
-        tone="info"
-      />
+      <MetricBadge label="Rating" value={ratingValue} tone={ratingTone} />
 
       {/* Placeholder Difficulty badge – logic later */}
       <MetricBadge label="Difficulty" value="Moderate" tone="warning" />
@@ -65,6 +56,13 @@ export default function InstructorMetricBadgesRow({
 }
 
 /* ---------- Helpers ---------- */
+
+function formatPercent(raw: number) {
+  // Clamp to [0, 100] so UI can't show weird values
+  const clamped = Math.max(0, Math.min(100, raw));
+  // If it's basically an integer, show no decimals; otherwise show 1 decimal
+  return Number.isInteger(clamped) ? clamped.toFixed(0) : clamped.toFixed(1);
+}
 
 function getGpaBadge(
   inst: InstructorSummary

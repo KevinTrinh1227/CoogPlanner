@@ -1,5 +1,6 @@
 // lib/courseLoader.ts
-"use server";
+import "server-only";
+import { cache } from "react";
 
 import type {
   Course,
@@ -113,7 +114,7 @@ function buildSnapshotFromDifficulty(
     totalInstructors,
     totalSections: sectionCount || null,
     avgClassSize,
-    gpaStdDev: null, // can compute later from per-term GPAs if you want
+    gpaStdDev: null,
   };
 }
 
@@ -139,21 +140,19 @@ function buildBadgesFromDifficulty(
   const difficultyScore =
     row?.difficulty_score != null ? Number(row.difficulty_score) : null;
 
-  // If difficulty_label exists in DB, use it as-is (e.g., "Very Easy", "Easy", "Hard", "Very Hard").
-  // If it's missing/empty, we leave it as null so the UI component can decide what to show.
   const rawLabel =
     typeof row?.difficulty_label === "string"
       ? row.difficulty_label.trim()
       : "";
 
-  const difficultyLabel = rawLabel.length > 0 ? rawLabel : null; // <- no automatic label fallback
+  const difficultyLabel = rawLabel.length > 0 ? rawLabel : null;
 
-  const trend: TrendLabel = "Stable"; // placeholder until you compute real trend
+  const trend: TrendLabel = "Stable"; // placeholder
 
   return {
     gpa,
     dropRate,
-    difficultyLabel: difficultyLabel as any, // allow null / custom strings; UI will handle
+    difficultyLabel: difficultyLabel as any,
     difficultyScore,
     trend,
   };
@@ -170,7 +169,6 @@ function buildPastSections(rows: any[]): PastSection[] {
     const nr = safeNumber(row.not_reported_count);
     const w = safeNumber(row.total_dropped);
 
-    // Total enrolled = all grade outcomes + withdrawals
     const totalEnrolled = a + b + c + d + f + s + nr + w;
 
     const letters: SectionLetterBreakdown = {
@@ -195,8 +193,8 @@ function buildPastSections(rows: any[]): PastSection[] {
       term: row.term ?? "Unknown term",
       instructor: instructorName,
       section: row.class_section ?? "",
-      enrolled: totalEnrolled, // always a number (0+)
-      gpa: row.avg_gpa != null ? Number(row.avg_gpa) : 0, // default to 0 instead of null
+      enrolled: totalEnrolled,
+      gpa: row.avg_gpa != null ? Number(row.avg_gpa) : 0,
       letters,
     };
   });
@@ -247,7 +245,6 @@ function buildInstructorSummaries(rows: any[]): InstructorSummary[] {
     }
     const agg = byName.get(name)!;
 
-    // Track how many distinct courses & sections this instructor has
     const courseKey = `${row.subject ?? ""}-${row.catalog_nbr ?? ""}`;
     agg.courses.add(courseKey);
     agg.sections += 1;
@@ -277,7 +274,7 @@ function buildInstructorSummaries(rows: any[]): InstructorSummary[] {
       name,
       summary: parts.join(" · "),
       department: agg.subject ?? null,
-      rating: null, // placeholder for future RateMyProf / etc
+      rating: null,
 
       totalStudents: agg.students || null,
       avgGpaNumeric: avgGpa,
@@ -287,7 +284,6 @@ function buildInstructorSummaries(rows: any[]): InstructorSummary[] {
     });
   }
 
-  // Sort by number of students descending
   summaries.sort((a, b) => {
     const aStudents = parseInt(a.summary.split(" ")[0].replace(/,/g, "")) || 0;
     const bStudents = parseInt(b.summary.split(" ")[0].replace(/,/g, "")) || 0;
@@ -317,12 +313,111 @@ function buildInstructorNarrative(
   return `Over the years, ${courseCode} – ${courseName} has been taught by instructors like ${firstFew}. Historical grade data shows a wide range of outcomes across different teaching styles. Use the instructor list above, along with GPA and drop-rate summaries, to decide which sections best fit how you like to learn.`;
 }
 
+// --- FAST HEADER LOADER (for instant title + code + badges) -----------
+
+export type CourseHeader = {
+  name: string;
+  displayCode: string;
+  subject: string;
+  number: string;
+  badges: CourseBadges;
+};
+
+function buildHeaderBadges(diff: any | null): CourseBadges {
+  const gpa = diff?.avg_gpa != null ? Number(diff.avg_gpa) : null;
+  const dropRate =
+    diff?.withdraw_rate != null ? Number(diff.withdraw_rate) : null;
+
+  const difficultyScore =
+    diff?.difficulty_score != null ? Number(diff.difficulty_score) : null;
+
+  const rawLabel =
+    typeof diff?.difficulty_label === "string"
+      ? diff.difficulty_label.trim()
+      : "";
+  const difficultyLabel = rawLabel.length > 0 ? rawLabel : null;
+
+  const trend: TrendLabel = "Stable"; // placeholder (same as elsewhere)
+
+  return {
+    gpa,
+    dropRate,
+    difficultyLabel: difficultyLabel as any,
+    difficultyScore,
+    trend,
+  };
+}
+
+async function _getCourseHeaderByCodeFromDb(
+  rawCode: string
+): Promise<CourseHeader | null> {
+  const { subject, number } = parseCourseCode(rawCode);
+
+  if (!subject || !number) return null;
+
+  const supabase = getSupabaseServerClient();
+
+  // 1) try course_difficulty first (fast) — now includes badge fields
+  const { data: diff, error: diffErr } = await supabase
+    .from("course_difficulty")
+    .select(
+      "course_title, course_code, avg_gpa, withdraw_rate, difficulty_score, difficulty_label"
+    )
+    .eq("subject", subject)
+    .eq("number", number)
+    .maybeSingle();
+
+  if (diffErr) {
+    console.error(
+      "Error fetching course_difficulty (header):",
+      diffErr.message
+    );
+  }
+
+  // 2) fallback to latest catalog title if difficulty title missing
+  let catalogTitle: string | null = null;
+  if (!diff?.course_title) {
+    const { data: cat, error: catErr } = await supabase
+      .from("course_publication_details")
+      .select("title")
+      .eq("subject", subject)
+      .eq("number", number)
+      .order("catalog_year", { ascending: false })
+      .order("updated_at", { ascending: false })
+      .limit(1);
+
+    if (catErr) {
+      console.error(
+        "Error fetching course_publication_details (header):",
+        catErr.message
+      );
+    }
+
+    catalogTitle = cat?.[0]?.title ?? null;
+  }
+
+  const name = catalogTitle || diff?.course_title || "Unknown course title";
+
+  const rawDisplayCode = diff?.course_code
+    ? String(diff.course_code)
+    : `${subject}-${number}`;
+
+  const displayCode = getCourseDisplayCode({ code: rawDisplayCode } as Course);
+
+  // if diff is missing, still return a safe “empty” badges object
+  const badges = buildHeaderBadges(diff);
+
+  return { name, displayCode, subject, number, badges };
+}
+
+export const getCourseHeaderByCodeFromDb = cache(_getCourseHeaderByCodeFromDb);
+
 // --- main loader ----------------------------------------------------
 
-export async function getCourseByCodeFromDb(
-  rawCode: string
-): Promise<Course | null> {
+async function _getCourseByCodeFromDb(rawCode: string): Promise<Course | null> {
   const { subject, number } = parseCourseCode(rawCode);
+  if (!subject || !number) return null;
+
   const supabase = getSupabaseServerClient();
 
   // 1) course_difficulty (aggregated metrics)
@@ -372,12 +467,10 @@ export async function getCourseByCodeFromDb(
 
   const rows = gradeRows ?? [];
 
-  // If we literally have nothing, bail
   if (!difficultyRow && !catalogRow && rows.length === 0) {
     return null;
   }
 
-  // Build parts
   const displayCode = difficultyRow?.course_code
     ? String(difficultyRow.course_code)
     : `${subject}-${number}`;
@@ -416,7 +509,7 @@ export async function getCourseByCodeFromDb(
     labHours:
       catalogRow?.lab_contact != null ? Number(catalogRow.lab_contact) : null,
     description: catalogRow?.description ?? nameFromGrades ?? courseName,
-    fulfills: [], // to be filled from a future requirements table
+    fulfills: [],
     repeatability: catalogRow?.repeatability ?? null,
     tccnsEquivalent: null,
     additionalFee: catalogRow?.additional_fee ?? null,
@@ -432,7 +525,7 @@ export async function getCourseByCodeFromDb(
   const course: Course = {
     code: displayCode,
     name: courseName,
-    department: subject, // you can prettify later (e.g., map COSC -> "Computer Science")
+    department: subject,
     badges,
     catalog,
     snapshot,
@@ -444,3 +537,5 @@ export async function getCourseByCodeFromDb(
 
   return course;
 }
+
+export const getCourseByCodeFromDb = cache(_getCourseByCodeFromDb);

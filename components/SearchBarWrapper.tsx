@@ -8,7 +8,15 @@ export default function SearchBarWrapper() {
   const pathname = usePathname();
 
   // Hide search bar on specific top-level pages
-  const hiddenPrefixes = ["/faq", "/updates", "/privacy-legal", "/about"];
+  const hiddenPrefixes = [
+    "/faq",
+    "/updates",
+    "/privacy-legal",
+    "/about",
+    "/browser-extension",
+    "/login",
+    "/signup",
+  ];
 
   if (hiddenPrefixes.some((prefix) => pathname.startsWith(prefix))) {
     return null;

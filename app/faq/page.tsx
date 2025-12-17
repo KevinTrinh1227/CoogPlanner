@@ -1,10 +1,11 @@
 // app/faq/page.tsx
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { faqItems } from "@/config/faq";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 
 // Simple slugify based on question text
 const slugify = (input: string) =>
@@ -13,6 +14,20 @@ const slugify = (input: string) =>
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+
+// Very small inline markdown renderer for **bold** only
+const renderInlineMarkdown = (text: string): React.ReactNode[] => {
+  // Split on segments that look like **...**
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+
+  return parts.map((part, index) => {
+    const match = part.match(/^\*\*([^*]+)\*\*$/);
+    if (match) {
+      return <strong key={index}>{match[1]}</strong>;
+    }
+    return <span key={index}>{part}</span>;
+  });
+};
 
 // This component actually uses the hooks and is wrapped in <Suspense>
 function FaqPageInner() {
@@ -28,10 +43,26 @@ function FaqPageInner() {
     []
   );
 
-  // Initial open state comes from URL
+  // Initial open state comes from URL (only on first render)
   const [activeSlug, setActiveSlug] = useState<string | undefined>(() => {
     return searchParams.get("q") || undefined;
   });
+
+  // Remember the initial slug from the URL so we only scroll on page load,
+  // not every time the query param changes while already on /faq.
+  const initialSlugRef = useRef<string | undefined>(undefined);
+  if (initialSlugRef.current === undefined) {
+    initialSlugRef.current = searchParams.get("q") || undefined;
+  }
+
+  useEffect(() => {
+    if (!initialSlugRef.current) return;
+
+    const el = document.getElementById(`faq-${initialSlugRef.current}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
 
   const openSlug = (slug: string) => {
     setActiveSlug(slug);
@@ -61,31 +92,22 @@ function FaqPageInner() {
       }
     };
 
-  // For header “last updated”
-  const faqLastUpdated = faqItems[0]?.lastUpdated ?? "2025";
-
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10 lg:py-14">
-      {/* Header card – visually aligned with Updates / Privacy pages */}
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg md:p-8">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-900/80 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-slate-200">
-            <span aria-hidden className="text-sm">
-              ❓
-            </span>
-            <span>FAQ &amp; Help</span>
-          </div>
-          <p className="text-xs text-slate-400">
-            Last updated:{" "}
-            <span className="font-medium text-slate-200">{faqLastUpdated}</span>
-          </p>
-        </div>
+      {/* Breadcrumb – sits at the very top */}
+      <PageBreadcrumb
+        crumbs={[{ label: "FAQ" }]}
+        showStarAndCart={false}
+        className="mb-3"
+      />
 
+      {/* Page header */}
+      <section>
         <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-50 md:text-3xl">
-          Frequently Asked Questions
+          🤔 Frequently Asked Questions
         </h1>
 
-        <p className="mt-4 max-w-3xl text-xs leading-relaxed text-slate-300 md:text-sm">
+        <p className="mt-2 max-w-5xl text-xs leading-relaxed text-slate-300 md:text-sm">
           Answers to the most common questions about data freshness, accuracy,
           security, contributions, and more. Click a question below to expand
           its answer.
@@ -104,7 +126,7 @@ function FaqPageInner() {
             <section
               key={faq.slug}
               id={`faq-${faq.slug}`}
-              className="w-full rounded-2xl border border-slate-800 bg-slate-950/80 p-5 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/70 hover:shadow-md md:p-7"
+              className="scroll-mt-24 w-full rounded-2xl border border-slate-800 bg-slate-950/80 p-5 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/70 hover:shadow-md md:p-7"
             >
               {/* Header row is clickable */}
               <div
@@ -166,7 +188,7 @@ function FaqPageInner() {
                     key={idx}
                     className="mb-2 whitespace-pre-line text-xs leading-relaxed text-slate-200 last:mb-0 md:text-sm"
                   >
-                    {para}
+                    {renderInlineMarkdown(para)}
                   </p>
                 ))}
               </div>

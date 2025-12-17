@@ -5,6 +5,29 @@
   --foreground: #171717;
 }
 
+html {
+  scroll-behavior: auto;
+}
+
+/* ---- Force default cursor everywhere ---- */
+*,
+*::before,
+*::after {
+  cursor: default !important;
+}
+
+/* ---- Exceptions: places you type ---- */
+input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not(
+    [type="radio"]
+  ),
+textarea,
+select,
+[contenteditable="true"],
+[contenteditable=""],
+.ProseMirror {
+  cursor: text !important;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -23,4 +46,23 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Nice, subtle scrollbar for dropdowns / panels */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #64748b #020617; /* thumb, track */
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #020617; /* bg-slate-950-ish */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #64748b; /* slate-500-ish */
+  border-radius: 9999px;
 }

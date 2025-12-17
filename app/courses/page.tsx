@@ -26,7 +26,7 @@ const placeholderCourses = [
 
 export default function CoursesPage() {
   return (
-    <div className="space-y-8 py-8 md:py-10">
+    <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-10 lg:py-14">
       {/* Header card */}
       <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg md:p-8">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -37,7 +37,7 @@ export default function CoursesPage() {
             <span>Browse Courses</span>
           </div>
           <p className="text-xs text-slate-400">
-            Showing placeholder UH courses — search & filters coming soon.
+            Showing placeholder UH courses – search & filters coming soon.
           </p>
         </div>
 

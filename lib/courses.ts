@@ -4,6 +4,34 @@
 export type DifficultyLabel = "Easy" | "Moderate" | "Hard";
 export type TrendLabel = "Improving" | "Stable" | "Declining";
 
+/**
+ * Format a user-facing course code like "COSC 3320" from the internal code.
+ *
+ * Supports formats like:
+ *  - "COSC-3320"
+ *  - "COSC 3320"
+ *  - "COSC3320" (fallback: no space inserted)
+ */
+export function getCourseDisplayCode(course: Course): string {
+  const raw = course.code.trim();
+  if (!raw) return "";
+
+  // First try splitting on dash or whitespace, e.g. "COSC-3320" or "COSC 3320"
+  const [subject, rest] = raw.split(/[\s-]+/, 2);
+  if (rest) {
+    return `${subject} ${rest}`;
+  }
+
+  // Fallback: if it's like "COSC3320", try to separate letters + digits
+  const match = raw.match(/^([A-Za-z]+)(\d.*)$/);
+  if (match) {
+    return `${match[1]} ${match[2]}`;
+  }
+
+  // As a last resort, just return the raw code
+  return raw;
+}
+
 export type CourseBadges = {
   gpa: number | null;
   dropRate: number | null; // percent
@@ -21,7 +49,7 @@ export type CourseCatalogInfo = {
   repeatability: string | null;
   tccnsEquivalent: string | null;
   additionalFee: string | null;
-  prerequisites?: string | null; // 👈 add this
+  prerequisites?: string | null;
 };
 
 export type CourseSnapshot = {
@@ -30,16 +58,30 @@ export type CourseSnapshot = {
   totalEnrolled: number | null;
   totalInstructors: number | null;
   totalSections: number | null;
+  avgClassSize: number | null;
+  // standard deviation for the course's GPA / grade distribution
+  gpaStdDev: number | null;
 };
 
 export type GradeBucket = {
-  label: string; // "A", "B", "W", etc.
+  label: string; // "A", "B", "C", "D", "F", "W", "S", "NR", etc.
   percentage: number; // 0–100
 };
 
 export type InstructorSummary = {
   name: string;
   summary: string; // e.g. "224 students · Avg GPA 2.70 · Drop 19%"
+  department?: string | null;
+  rating?: number | null;
+
+  // Numeric fields for badges / stats
+  totalStudents?: number | null;
+  avgGpaNumeric?: number | null;
+  dropRateNumeric?: number | null;
+
+  // NEW: how many courses/sections this instructor has (for this context)
+  courseCount?: number | null;
+  sectionCount?: number | null;
 };
 
 export type SectionLetterBreakdown = {
@@ -49,6 +91,8 @@ export type SectionLetterBreakdown = {
   D: number | null;
   F: number | null;
   W: number | null;
+  S?: number | null;
+  NR?: number | null;
 };
 
 export type PastSection = {
@@ -57,7 +101,7 @@ export type PastSection = {
   section: string;
   enrolled: number | null;
   gpa: number | null;
-  letters?: SectionLetterBreakdown; // 👈 add this
+  letters?: SectionLetterBreakdown;
 };
 
 export type Course = {
@@ -69,6 +113,11 @@ export type Course = {
   snapshot: CourseSnapshot;
   gradeDistribution: GradeBucket[];
   instructors: InstructorSummary[];
+  /**
+   * Human-readable paragraph summarizing instructor history for this course.
+   * For now this is placeholder text; later it can be generated from real data.
+   */
+  instructorNarrative: string;
   pastSections: PastSection[];
 };
 
@@ -79,10 +128,10 @@ const placeholderCourses: Course[] = [
     name: "Algorithms and Data Structures",
     department: "Computer Science",
     badges: {
-      gpa: 3.0,
+      gpa: 3.58,
       dropRate: 12, // percent
       difficultyLabel: "Easy",
-      difficultyScore: 2.1, // 1–5
+      difficultyScore: 1.78, // 1–5
       trend: "Declining",
     },
     catalog: {
@@ -107,6 +156,8 @@ const placeholderCourses: Course[] = [
       totalEnrolled: 4684,
       totalInstructors: 9,
       totalSections: 48,
+      avgClassSize: 97,
+      gpaStdDev: 0.45,
     },
     gradeDistribution: [
       { label: "A", percentage: 29 },
@@ -155,6 +206,8 @@ const placeholderCourses: Course[] = [
         summary: "508 students · Avg GPA 2.41 · Drop 27%",
       },
     ],
+    instructorNarrative:
+      "Over the years, COSC 3320 has been taught by a small group of core instructors, including Carlos Ordonez, Gopal Pandurangan, Ernst L Leiss, Panruo Wu, and others. Each instructor brings a slightly different emphasis to the course—some sections lean more theoretical, while others are more implementation-focused. Historical grade data shows a wide range of outcomes: instructors like Ernst L Leiss and Khalid Maen Hourani tend to post higher average GPAs with moderate drop rates, while others may be more challenging but still very highly regarded. Use the instructor list above, along with GPA and drop-rate summaries, to decide which teaching style best fits how you like to learn algorithms.",
     pastSections: [
       {
         term: "Spring 2025",

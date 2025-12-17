@@ -2,6 +2,7 @@
 
 import type { Metadata } from "next";
 import { siteConfig } from "@/config/site";
+import { PageBreadcrumb } from "@/components/PageBreadcrumb";
 import {
   getGithubOverview,
   type CommitSummary,
@@ -12,13 +13,19 @@ import {
 export const metadata: Metadata = {
   title: "About | Coog Planner",
   description:
-    "Learn more about Coog Planner, the people behind it, credits, and important disclaimers.",
+    "Learn more about Coog Planner, the people behind it, inspirations, sources, and important disclaimers.",
 };
 
 type CollaboratorProfile = {
   login: string;
   avatarUrl: string | null;
   contributions: number;
+};
+
+type TeamProfile = {
+  name: string;
+  login: string;
+  avatarUrl: string | null;
 };
 
 function fallbackAvatarForLogin(login: string | null | undefined, size = 80) {
@@ -29,7 +36,7 @@ function fallbackAvatarForLogin(login: string | null | undefined, size = 80) {
 function buildCollaborators(
   excludedLogins: string[],
   commits: CommitSummary[],
-  issues: IssueSummary[],
+  issues: CommitSummary[] | any[],
   prs: PullRequestSummary[]
 ): CollaboratorProfile[] {
   const map = new Map<string, CollaboratorProfile>();
@@ -42,9 +49,7 @@ function buildCollaborators(
     const existing = map.get(login);
     if (existing) {
       existing.contributions += 1;
-      if (!existing.avatarUrl && avatarUrl) {
-        existing.avatarUrl = avatarUrl;
-      }
+      if (!existing.avatarUrl && avatarUrl) existing.avatarUrl = avatarUrl;
     } else {
       map.set(login, {
         login,
@@ -54,13 +59,10 @@ function buildCollaborators(
     }
   };
 
-  // Commits
-  for (const c of commits) {
+  for (const c of commits)
     bump(c.authorLogin ?? null, c.authorAvatarUrl ?? null);
-  }
 
-  // Issues
-  for (const issue of issues) {
+  for (const issue of issues as any[]) {
     const login = (issue as any).authorLogin ?? issue.authorLogin ?? null;
     const avatar =
       (issue as any).authorAvatarUrl ??
@@ -69,7 +71,6 @@ function buildCollaborators(
     bump(login, avatar);
   }
 
-  // PRs
   for (const pr of prs) {
     const login = (pr as any).authorLogin ?? pr.authorLogin ?? null;
     const avatar =
@@ -82,37 +83,224 @@ function buildCollaborators(
     .slice(0, 16);
 }
 
+const buttonBase =
+  "inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2 font-medium text-slate-100 " +
+  "transition-[color,background-color,border-color,box-shadow,filter] duration-150 " +
+  "hover:bg-slate-900 hover:border-brand-light/80 hover:text-brand-light " +
+  "hover:shadow-[0_0_0_3px_rgba(255,255,255,0.03),0_0_25px_rgba(99,102,241,0.18)] " +
+  "focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/55 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950";
+
+const smallButtonBase =
+  "inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-100 " +
+  "transition-[color,background-color,border-color,box-shadow,filter] duration-150 " +
+  "hover:bg-slate-900 hover:border-brand-light/80 hover:text-brand-light " +
+  "hover:shadow-[0_0_0_3px_rgba(255,255,255,0.03),0_0_22px_rgba(99,102,241,0.16)] " +
+  "focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/55 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950";
+
+function EmojiButton({
+  href,
+  label,
+  emoji,
+  size = "md",
+  newTab = false,
+}: {
+  href: string;
+  label: string;
+  emoji: string;
+  size?: "md" | "sm";
+  newTab?: boolean;
+}) {
+  const cls = size === "sm" ? smallButtonBase : buttonBase;
+  return (
+    <a
+      href={href}
+      target={newTab ? "_blank" : undefined}
+      rel={newTab ? "noreferrer" : undefined}
+      className={cls}
+    >
+      <span aria-hidden className="text-sm">
+        {emoji}
+      </span>
+      <span>{label}</span>
+    </a>
+  );
+}
+
+function ProfileCard({
+  name,
+  login,
+  avatarUrl,
+}: {
+  name: string;
+  login: string;
+  avatarUrl: string | null;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-slate-900/80 p-4">
+      <div className="flex items-center gap-4">
+        <div className="h-14 w-14 overflow-hidden rounded-xl border border-slate-700 bg-slate-800">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={name}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-lg">
+              <span aria-hidden>👤</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex min-h-[56px] flex-col justify-center text-left">
+          <p className="text-sm font-semibold text-slate-100">{name}</p>
+          <p className="text-[0.75rem] text-slate-500">@{login}</p>
+        </div>
+      </div>
+
+      <EmojiButton
+        href={`https://github.com/${login}`}
+        label="GitHub"
+        emoji="💻"
+        size="sm"
+        newTab
+      />
+    </div>
+  );
+}
+
+function SourceRow({
+  title,
+  description,
+  authorHandle,
+  authorProfileUrl,
+  href,
+  buttonLabel,
+  buttonEmoji,
+}: {
+  title: string;
+  description: string;
+  authorHandle: string;
+  authorProfileUrl: string;
+  href: string;
+  buttonLabel: string;
+  buttonEmoji: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold text-slate-50">{title}</p>
+
+        <a
+          href={authorProfileUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="truncate text-xs text-red-400 hover:text-red-300"
+        >
+          {authorHandle}
+        </a>
+
+        <p className="mt-1 text-xs leading-relaxed text-slate-400">
+          {description}
+        </p>
+      </div>
+
+      <EmojiButton
+        href={href}
+        label={buttonLabel}
+        emoji={buttonEmoji}
+        size="sm"
+        newTab
+      />
+    </div>
+  );
+}
+
 export default async function AboutPage() {
   const { github, name } = siteConfig;
+
   const description =
-    "Coog Planner is a student-built tool designed to help University of Houston students explore courses, understand requirements, and plan their degree paths more clearly. It focuses on giving you a clean, fast, and transparent view of the information you need to make better registration decisions.";
+    "Coog Planner is a student-built tool designed to help University of Houston students explore courses, understand requirements, and plan degree paths more clearly with a clean, fast, and transparent interface.";
 
   const owner = github.owner;
   const repo = github.repo;
   const repoUrl = `https://github.com/${owner}/${repo}`;
 
+  // Update these if your routes differ
   const legalUrl = "/legal";
+  const privacyUrl = "/privacy";
+  const termsUrl = "/terms";
   const faqUrl = "/faq";
 
-  // Maintainers – static list
-  const maintainers = [
+  // Community links (swap to your real URLs)
+  const community = {
+    instagram: "https://instagram.com/",
+    github: repoUrl,
+    discord: "https://discord.com/invite/",
+    email: "mailto:hello@coogplanner.com",
+  };
+
+  // SOURCES: set these to the exact pages you want
+  const sources = [
     {
-      name: "Kevin Trinh",
-      role: "Developer / Maintainer",
-      login: owner,
-      avatarUrl: fallbackAvatarForLogin(owner, 96),
+      title: "CougarGrades",
+      authorHandle: "@CougarGrades",
+      authorProfileUrl: "https://github.com/CougarGrades",
+      href: "https://github.com/CougarGrades", // change to the exact repo if you want
+      buttonLabel: "View Source",
+      buttonEmoji: "💻",
+      description:
+        "A UH student-built tool that made grade distribution transparency accessible. Coog Planner is heavily inspired by this student-first mindset.",
     },
-    // Add more maintainers here if needed
+    {
+      title: "CougarGrades Public Data",
+      authorHandle: "@CougarGrades",
+      authorProfileUrl: "https://github.com/CougarGrades",
+      href: "https://github.com/CougarGrades", // change to the exact public-data repo
+      buttonLabel: "View Repo",
+      buttonEmoji: "🗂️",
+      description:
+        "Public datasets and resources connected to CougarGrades. Used as a reference for how student tools can publish information responsibly.",
+    },
+    {
+      title: "UH Catalog & Official Docs",
+      authorHandle: "@UniversityOfHouston",
+      authorProfileUrl: "https://github.com/uh-edu", // change if you prefer
+      href: "https://uh.edu/catalog-undergraduate",
+      buttonLabel: "View Catalog",
+      buttonEmoji: "📖",
+      description:
+        "Official degree requirements, course descriptions, and academic policies. Coog Planner helps interpret official sources, not replace them.",
+    },
+  ] as const;
+
+  const author: TeamProfile = {
+    name: "Kevin Trinh",
+    login: owner,
+    avatarUrl: fallbackAvatarForLogin(owner, 96),
+  };
+
+  // Put additional maintainers here (if any). Author is separate.
+  const maintainers: TeamProfile[] = [
+    // Example:
+    // {
+    //   name: "Jane Doe",
+    //   login: "janedoe",
+    //   avatarUrl: fallbackAvatarForLogin("janedoe", 96),
+    // },
   ];
 
   let collaborators: CollaboratorProfile[] = [];
   try {
     const { commits, issues, pullRequests } = await getGithubOverview();
-    const excludedLogins = maintainers.map((m) => m.login);
+
+    // Exclude the author + maintainers from the Collaborators list
+    const excludedLogins = [author.login, ...maintainers.map((m) => m.login)];
+
     collaborators = buildCollaborators(
       excludedLogins,
       commits,
-      issues,
+      issues as any[],
       pullRequests
     );
   } catch {
@@ -121,272 +309,242 @@ export default async function AboutPage() {
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-10 lg:py-14">
+      <PageBreadcrumb
+        crumbs={[{ label: "About" }]}
+        showStarAndCart={false}
+        className="mb-3"
+      />
+
       {/* About */}
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg sm:p-8">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-900/80 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-300">
-            <span aria-hidden className="text-sm">
-              ℹ️
-            </span>
-            <span>About</span>
-          </div>
+      <section className="space-y-4">
+        <div>
+          <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-50 sm:text-3xl">
+            📌 About
+          </h1>
         </div>
 
-        <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-50 sm:text-3xl">
-          About {name ?? "Coog Planner"}
-        </h1>
+        <p className="text-sm leading-relaxed text-slate-300">{description}</p>
 
-        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-slate-300">
-          {description}
+        <p className="text-sm leading-relaxed text-slate-300">
+          {name ?? "Coog Planner"} is built primarily for{" "}
+          <span className="font-semibold">University of Houston</span> students
+          who want more visibility into how their classes, catalog year, and
+          long term goals fit together without juggling multiple tabs, PDFs, and
+          unofficial notes.
         </p>
 
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300">
-          The goal is simple: make it easier to see what&apos;s ahead — what
-          classes satisfy which requirements, how your plan fits into your
-          catalog year, and what options you have along the way — all without
-          replacing any official UH systems.
+        <p className="text-sm leading-relaxed text-slate-300">
+          Over time, the project is evolving into a small ecosystem with a
+          degree planner, course explorer, and browser extension that overlays
+          helpful context on UH systems. Everything is designed to be{" "}
+          <span className="font-semibold">transparent and explainable</span>.
         </p>
+
+        <details className="group mt-2 w-full rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-sm text-slate-300">
+          <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-medium text-slate-200">
+            <span className="font-semibold">Why does Coog Planner exist?</span>
+            <span className="text-[0.7rem] text-slate-500 transition-transform duration-200 group-open:rotate-90">
+              ▶
+            </span>
+          </summary>
+
+          <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]">
+            <div className="overflow-hidden">
+              <div className="mt-2 space-y-2 text-xs leading-relaxed text-slate-400">
+                <p>
+                  Coog Planner exists because degree planning at UH often turns
+                  into a confusing, multi-step process. Students bounce between
+                  the catalog, departmental PDFs, myUH screens, degree audits,
+                  and group chats trying to answer the same questions.
+                </p>
+                <p>
+                  The goal is to provide a clean interface that helps you
+                  understand what counts, what is missing, and what a realistic
+                  plan looks like. It focuses on clarity and explainability so
+                  the app can tell you not only what the result is, but why.
+                </p>
+                <p>
+                  This project is heavily inspired by{" "}
+                  <span className="font-semibold">CougarGrades</span>, created
+                  by <span className="font-semibold">Austin Jackson</span>.
+                  CougarGrades proved that student-built tools can have real
+                  impact at UH by making information more accessible. Coog
+                  Planner owes credit and acknowledgement to CougarGrades for
+                  the inspiration and for setting the standard for student-first
+                  transparency.
+                </p>
+                <p>
+                  Coog Planner is separate software and is not officially
+                  affiliated with UH. It is meant to help interpret official
+                  sources, not replace advising or official university systems.
+                </p>
+              </div>
+            </div>
+          </div>
+        </details>
       </section>
 
-      {/* Quick link resources */}
-      <section className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5 sm:p-6">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-300">
-          <span aria-hidden>🔗</span>
+      {/* Quick links */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">
           Quick links
         </h2>
-        <p className="mt-2 text-xs text-slate-400 sm:text-sm">
-          Jump straight to the most important resources related to Coog Planner.
-        </p>
 
-        <div className="mt-4 flex flex-wrap gap-3 text-xs sm:text-sm">
-          <a
-            href={repoUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-          >
-            <span aria-hidden>💻</span>
-            <span>View source code</span>
-          </a>
-
-          <a
+        <div className="mt-2 flex flex-wrap gap-3 text-xs sm:text-sm">
+          <EmojiButton href={repoUrl} label="Source Code" emoji="💻" newTab />
+          <EmojiButton
             href={legalUrl}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-          >
-            <span aria-hidden>⚖️</span>
-            <span>Legal &amp; privacy</span>
-          </a>
-
-          <a
-            href={faqUrl}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-          >
-            <span aria-hidden>❓</span>
-            <span>FAQ</span>
-          </a>
+            label="Legal, Privacy & TOS"
+            emoji="⚖️"
+          />
+          <EmojiButton href={faqUrl} label="FAQ" emoji="🤔" />
         </div>
       </section>
 
-      {/* Developers / Maintainers */}
-      <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-6 sm:p-8">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900/80 text-lg">
-            <span aria-hidden>👨‍💻</span>
-          </div>
-          <div className="flex-1">
-            <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
-              Developers &amp; maintainers
-            </h2>
-            <p className="mt-1 text-sm text-slate-300">
-              The core team responsible for designing, building, and maintaining
-              Coog Planner.
-            </p>
-          </div>
-        </div>
+      {/* Author */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
+          Author
+        </h2>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {maintainers.map((m) => (
-            <a
-              key={m.login}
-              href={`https://github.com/${m.login}`}
-              target="_blank"
-              rel="noreferrer"
-              className="group flex flex-col items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/80 p-4 text-center text-xs text-slate-200 transition-all duration-150 hover:-translate-y-1 hover:border-brand-light/70 hover:text-brand-light hover:shadow-lg focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-            >
-              <div className="h-14 w-14 overflow-hidden rounded-2xl border border-slate-700 bg-slate-800">
-                {m.avatarUrl ? (
-                  <img
-                    src={m.avatarUrl}
-                    alt={m.name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-lg">
-                    <span aria-hidden>👤</span>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-0.5">
-                <p className="font-semibold text-slate-100 group-hover:text-brand-light">
-                  {m.name}
-                </p>
-                <p className="text-[0.7rem] text-slate-400">{m.role}</p>
-                <p className="text-[0.7rem] text-slate-500">@{m.login}</p>
-              </div>
-            </a>
-          ))}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <ProfileCard
+            name={author.name}
+            login={author.login}
+            avatarUrl={author.avatarUrl}
+          />
         </div>
       </section>
 
-      {/* Collaborators (only if any) */}
-      {collaborators.length > 0 && (
-        <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-6 sm:p-8">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900/80 text-lg">
-              <span aria-hidden>🤝</span>
-            </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
-                Collaborators
-              </h2>
-              <p className="mt-1 text-sm text-slate-300">
-                Community members who have helped improve Coog Planner through
-                commits, issues, and pull requests.
-              </p>
-            </div>
-          </div>
+      {/* Maintainers */}
+      {maintainers.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
+            Maintainers
+          </h2>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {collaborators.map((c) => (
-              <a
-                key={c.login}
-                href={`https://github.com/${c.login}`}
-                target="_blank"
-                rel="noreferrer"
-                className="group flex flex-col items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/80 p-4 text-center text-xs text-slate-200 transition-all duration-150 hover:-translate-y-1 hover:border-brand-light/70 hover:text-brand-light hover:shadow-lg focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-              >
-                <div className="h-14 w-14 overflow-hidden rounded-2xl border border-slate-700 bg-slate-800">
-                  {c.avatarUrl ? (
-                    <img
-                      src={c.avatarUrl}
-                      alt={c.login}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-lg">
-                      <span aria-hidden>👤</span>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-0.5">
-                  <p className="font-semibold text-slate-100 group-hover:text-brand-light">
-                    @{c.login}
-                  </p>
-                  <p className="text-[0.7rem] text-slate-400">
-                    {c.contributions} contributions
-                  </p>
-                </div>
-              </a>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {maintainers.map((m) => (
+              <ProfileCard
+                key={m.login}
+                name={m.name}
+                login={m.login}
+                avatarUrl={m.avatarUrl}
+              />
             ))}
           </div>
         </section>
       )}
 
-      {/* Credits & sources */}
-      <section className="space-y-3 rounded-2xl border border-slate-800 bg-slate-950/70 p-6 sm:p-8">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900/80 text-lg">
-            <span aria-hidden>📚</span>
-          </div>
-          <div className="flex-1">
-            <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
-              Credits &amp; sources
-            </h2>
-            <p className="mt-1 text-sm text-slate-300">
-              Coog Planner takes inspiration from other student-built tools and
-              publicly available information around the University of Houston.
-            </p>
-          </div>
-        </div>
+      {/* Collaborators */}
+      {collaborators.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
+            Collaborators
+          </h2>
 
-        <div className="space-y-2 text-sm text-slate-300">
-          <p>
-            🐾 <span className="font-semibold">CougarGrades</span> – This
-            project is conceptually inspired by{" "}
-            <span className="font-semibold">CougarGrades</span>, an independent
-            student-created tool that visualizes UH grade distributions. Coog
-            Planner is separate software with its own codebase and goals but
-            shares the same spirit of making academic information more
-            transparent for students.
-          </p>
-          <p>
-            🧾{" "}
-            <span className="font-semibold">
-              UH catalog &amp; official docs
-            </span>{" "}
-            – Degree requirements, course descriptions, and policies are based
-            on publicly available information such as the UH undergraduate
-            catalog, departmental websites, and official advising materials.
-            Always refer back to official UH sources to confirm anything before
-            making decisions.
-          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {collaborators.map((c) => (
+              <ProfileCard
+                key={c.login}
+                name={c.login}
+                login={c.login}
+                avatarUrl={c.avatarUrl}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Inspiration & sources */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
+          Inspiration &amp; Sources
+        </h2>
+
+        <div className="space-y-3">
+          {sources.map((s) => (
+            <SourceRow
+              key={s.title}
+              title={s.title}
+              description={s.description}
+              authorHandle={s.authorHandle}
+              authorProfileUrl={s.authorProfileUrl}
+              href={s.href}
+              buttonLabel={s.buttonLabel}
+              buttonEmoji={s.buttonEmoji}
+            />
+          ))}
         </div>
       </section>
 
       {/* Important notice & disclaimer */}
-      <section className="space-y-3 rounded-2xl border border-slate-800 bg-slate-950/80 p-6 sm:p-8">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900/80 text-lg">
-            <span aria-hidden>⚠️</span>
-          </div>
-          <div className="flex-1">
-            <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
-              Important notice &amp; disclaimer
-            </h2>
-          </div>
-        </div>
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
+          Important Notice &amp; Disclaimer
+        </h2>
 
         <div className="space-y-2 text-sm text-slate-300">
           <p>
             Coog Planner is an{" "}
-            <span className="font-semibold">
-              independent, student-built tool
-            </span>
-            . It is <span className="font-semibold">not</span> an official
-            product of the University of Houston, the UH System, or any UH
-            college, department, or office.
+            <span className="font-semibold">independent, student-built</span>{" "}
+            project and is <span className="font-semibold">not</span> an
+            official product of the University of Houston.
           </p>
           <p>
-            This project is{" "}
+            It is{" "}
             <span className="font-semibold">
-              not affiliated with, endorsed by, authorized by, sponsored by, or
-              associated with
+              not affiliated with or endorsed by
             </span>{" "}
-            the University of Houston in any way. UH, its trademarks, and any
-            related names or logos remain the property of their respective
-            owners.
+            UH, UH System, or any UH college, department, or office. UH names
+            and trademarks belong to their owners.
           </p>
           <p>
-            All information shown in Coog Planner is provided for{" "}
-            <span className="font-semibold">
-              informational and planning purposes only
-            </span>
-            . Course offerings, prerequisites, degree requirements, and policies
-            can change and may vary by catalog year. Always verify details
-            directly in official UH systems (myUH/PeopleSoft, the UH catalog)
-            and with your academic advisor before making academic or enrollment
-            decisions.
+            Information shown is for{" "}
+            <span className="font-semibold">planning purposes only</span>.
+            Requirements and offerings can change by catalog year. Always
+            confirm details in official UH systems and with your advisor.
           </p>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-3 text-xs sm:text-sm">
-          <a
-            href={legalUrl}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 font-medium text-slate-100 transition-all duration-150 hover:-translate-y-0.5 hover:border-brand-light/80 hover:text-brand-light hover:shadow-md focus-visible:outline-none focus-visible:ring focus-visible:ring-brand-light/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-          >
-            <span aria-hidden>⚖️</span>
-            <span>View full legal &amp; privacy details</span>
-          </a>
+          <EmojiButton href={legalUrl} label="Legal" emoji="⚖️" />
+          <EmojiButton href={privacyUrl} label="Privacy Policy" emoji="🔒" />
+          <EmojiButton href={termsUrl} label="Terms of Service" emoji="🧾" />
+        </div>
+      </section>
+
+      {/* Contact */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
+          Contact
+        </h2>
+
+        <p className="text-sm text-slate-300">
+          Want to get involved, report an issue, or reach out directly? Use the
+          links below.
+        </p>
+
+        <div className="mt-2 flex flex-wrap gap-3 text-xs sm:text-sm">
+          <EmojiButton
+            href={community.instagram}
+            label="Instagram"
+            emoji="📸"
+            newTab
+          />
+          <EmojiButton
+            href={community.github}
+            label="GitHub"
+            emoji="💻"
+            newTab
+          />
+          <EmojiButton
+            href={community.discord}
+            label="Discord Server"
+            emoji="💬"
+            newTab
+          />
+          <EmojiButton href={community.email} label="Email" emoji="✉️" />
         </div>
       </section>
     </div>

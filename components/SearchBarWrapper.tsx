@@ -16,6 +16,7 @@ export default function SearchBarWrapper() {
     "/browser-extension",
     "/login",
     "/signup",
+    "/ask",
   ];
 
   if (hiddenPrefixes.some((prefix) => pathname.startsWith(prefix))) {

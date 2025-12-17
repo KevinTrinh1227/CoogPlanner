@@ -1,0 +1,21 @@
+{
+  "/(auth)/login/page": "/login",
+  "/(auth)/signup/page": "/signup",
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/about/page": "/about",
+  "/api/simple-syllabus/route": "/api/simple-syllabus",
+  "/ask/page": "/ask",
+  "/browser-extension/page": "/browser-extension",
+  "/courses/[code]/page": "/courses/[code]",
+  "/courses/page": "/courses",
+  "/dashboard/page": "/dashboard",
+  "/faq/page": "/faq",
+  "/favicon.ico/route": "/favicon.ico",
+  "/page": "/",
+  "/privacy-legal/page": "/privacy-legal",
+  "/progress/page": "/progress",
+  "/search/page": "/search",
+  "/top/page": "/top",
+  "/updates/page": "/updates"
+}

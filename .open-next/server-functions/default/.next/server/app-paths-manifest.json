@@ -1,0 +1,21 @@
+{
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/(auth)/signup/page": "app/(auth)/signup/page.js",
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/about/page": "app/about/page.js",
+  "/api/simple-syllabus/route": "app/api/simple-syllabus/route.js",
+  "/ask/page": "app/ask/page.js",
+  "/browser-extension/page": "app/browser-extension/page.js",
+  "/courses/[code]/page": "app/courses/[code]/page.js",
+  "/courses/page": "app/courses/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/faq/page": "app/faq/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/page": "app/page.js",
+  "/privacy-legal/page": "app/privacy-legal/page.js",
+  "/progress/page": "app/progress/page.js",
+  "/search/page": "app/search/page.js",
+  "/top/page": "app/top/page.js",
+  "/updates/page": "app/updates/page.js"
+}
